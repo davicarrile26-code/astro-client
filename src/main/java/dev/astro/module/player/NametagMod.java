@@ -3,7 +3,6 @@ package dev.astro.module.player;
 import dev.astro.AstroClient;
 import dev.astro.module.Category;
 import dev.astro.module.Module;
-import dev.astro.module.render.LevelHead;
 import dev.astro.module.setting.BooleanSetting;
 import dev.astro.module.setting.ColorSetting;
 import dev.astro.module.setting.NumberSetting;
@@ -85,29 +84,25 @@ public final class NametagMod extends Module {
         // Build display string
         String name = player.getDisplayName().getFormattedText();
 
-        LevelHead levelHead = AstroClient.INSTANCE.getModuleManager().getByClass(LevelHead.class);
-        if (levelHead != null) {
-            String levelText = levelHead.getInlineDisplay(player);
-            if (levelText != null && !levelText.isEmpty()) {
-                name = "\u00a7e" + levelText + " \u00a7r" + name;
-            }
-        }
-
         // AstroClient user icon
         if (AstroClient.INSTANCE.getAstroUsers() != null
                 && AstroClient.INSTANCE.getAstroUsers().isAstroUser(player.getUniqueID())) {
             name = AstroClient.INSTANCE.getAstroUsers().getMarkerPrefix() + name;
         }
 
+        String healthText = null;
         if (showHealth.getValue()) {
             float totalHealth = player.getHealth() + player.getAbsorptionAmount();
             int hp = (int) Math.ceil(totalHealth);
-            name = name + " \u00a77|\u00a7r \u00a7c" + hp + "\u2764";
+            healthText = "\u00a7c" + hp + "\u2764";
         }
 
-        float scaleMul = nameScale.getFloatValue();
-        float f1 = 0.016666668F * 1.6F * scaleMul;
-        int halfW = fr.getStringWidth(name) / 2;
+        float f1 = getWorldTextScale();
+        int nameWidth = fr.getStringWidth(name);
+        int healthWidth = healthText != null ? fr.getStringWidth(healthText) : 0;
+        int contentWidth = Math.max(nameWidth, healthWidth);
+        int halfW = contentWidth / 2;
+        int bgBottom = healthText != null ? 17 : 8;
 
         GlStateManager.pushMatrix();
         GlStateManager.translate((float) x, (float) y + player.height + 0.5F, (float) z);
@@ -135,8 +130,8 @@ public final class NametagMod extends Module {
             GlStateManager.disableAlpha(); // Prevent alpha test from discarding semi-transparent fragments
             wr.begin(7, DefaultVertexFormats.POSITION_COLOR);
             wr.pos(-halfW - 1, -1, 0.0D).color(bR, bG, bB, bgAlpha).endVertex();
-            wr.pos(-halfW - 1,  8, 0.0D).color(bR, bG, bB, bgAlpha).endVertex();
-            wr.pos( halfW + 1,  8, 0.0D).color(bR, bG, bB, bgAlpha).endVertex();
+            wr.pos(-halfW - 1,  bgBottom, 0.0D).color(bR, bG, bB, bgAlpha).endVertex();
+            wr.pos( halfW + 1,  bgBottom, 0.0D).color(bR, bG, bB, bgAlpha).endVertex();
             wr.pos( halfW + 1, -1, 0.0D).color(bR, bG, bB, bgAlpha).endVertex();
             tes.draw();
             GlStateManager.enableAlpha();
@@ -144,10 +139,20 @@ public final class NametagMod extends Module {
         }
 
         // ── Text ──
+        int nameX = -nameWidth / 2;
         if (textShadow.getValue()) {
-            fr.drawStringWithShadow(name, -halfW, 0, 0xFFFFFFFF);
+            fr.drawStringWithShadow(name, nameX, 0, 0xFFFFFFFF);
         } else {
-            fr.drawString(name, -halfW, 0, 0xFFFFFFFF);
+            fr.drawString(name, nameX, 0, 0xFFFFFFFF);
+        }
+
+        if (healthText != null) {
+            int healthX = -healthWidth / 2;
+            if (textShadow.getValue()) {
+                fr.drawStringWithShadow(healthText, healthX, 9, 0xFFFFFFFF);
+            } else {
+                fr.drawString(healthText, healthX, 9, 0xFFFFFFFF);
+            }
         }
 
         GlStateManager.enableLighting();
@@ -155,6 +160,14 @@ public final class NametagMod extends Module {
         GlStateManager.depthMask(true);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();
+    }
+
+    public float getLevelHeadOffset() {
+        return 0.18F + (10.0F * getWorldTextScale());
+    }
+
+    private float getWorldTextScale() {
+        return 0.016666668F * 1.6F * nameScale.getFloatValue();
     }
 
     private static boolean shouldRender(EntityPlayer player, Minecraft mc) {

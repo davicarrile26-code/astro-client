@@ -89,13 +89,23 @@ public final class HypixelAPI {
         return getBedwarsLevel(uuid);
     }
 
+    public int peekBedwarsLevel(UUID uuid) {
+        Integer cached = bedwarsLevelCache.get(uuid);
+        return cached != null ? cached : -1;
+    }
+
+    public int peekHypixelLevel(UUID uuid) {
+        Integer cached = hypixelLevelCache.get(uuid);
+        return cached != null ? cached : -1;
+    }
+
     /**
      * Returns the cached Bedwars level for a player, or -1 if not yet fetched.
      * Automatically kicks off an async fetch if not cached.
      */
     public int getBedwarsLevel(UUID uuid) {
-        Integer cached = bedwarsLevelCache.get(uuid);
-        if (cached != null) return cached;
+        int cached = peekBedwarsLevel(uuid);
+        if (cached >= 0) return cached;
 
         if (!pending.containsKey(uuid)) {
             fetchProfileAsync(uuid);
@@ -108,8 +118,8 @@ public final class HypixelAPI {
      * Automatically kicks off an async fetch if not cached.
      */
     public int getHypixelLevel(UUID uuid) {
-        Integer cached = hypixelLevelCache.get(uuid);
-        if (cached != null) return cached;
+        int cached = peekHypixelLevel(uuid);
+        if (cached >= 0) return cached;
 
         if (!pending.containsKey(uuid)) {
             fetchProfileAsync(uuid);

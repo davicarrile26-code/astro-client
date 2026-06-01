@@ -3,6 +3,7 @@ package dev.astro.module.render;
 import dev.astro.AstroClient;
 import dev.astro.module.Category;
 import dev.astro.module.Module;
+import dev.astro.module.player.NametagMod;
 import dev.astro.module.setting.BooleanSetting;
 import dev.astro.module.setting.ModeSetting;
 import dev.astro.module.setting.NumberSetting;
@@ -37,7 +38,6 @@ import java.util.UUID;
 
 /**
  * Displays each player's Bedwars star, Hypixel level, or both above their nametag.
- * Also exposes inline text so NametagMod can fold level data into its custom tag.
  */
 public final class LevelHead extends Module {
 
@@ -145,6 +145,7 @@ public final class LevelHead extends Module {
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
         Minecraft mc = Minecraft.getMinecraft();
+        if (!inGame) return;
         if (mc.thePlayer == null || mc.theWorld == null) return;
         if (mc.gameSettings.hideGUI) return;
 
@@ -178,17 +179,30 @@ public final class LevelHead extends Module {
                 offset *= 2;
             }
 
+            NametagMod nametagMod = AstroClient.INSTANCE.getModuleManager().getByClass(NametagMod.class);
+            if (nametagMod != null && nametagMod.isEnabled()) {
+                offset += nametagMod.getLevelHeadOffset();
+            }
+
             renderTag(player, bedwarsLevel, hypixelLevel, x, y + offset, z, mc);
         }
     }
 
     private void preloadLevels() {
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.theWorld == null) return;
+        if (mc.getNetHandler() == null) return;
 
-        for (EntityPlayer player : mc.theWorld.playerEntities) {
-            getBedwarsLevel(player);
-            getHypixelLevel(player);
+        for (NetworkPlayerInfo info : mc.getNetHandler().getPlayerInfoMap()) {
+            UUID uuid = info.getGameProfile().getId();
+            if (uuid == null) continue;
+
+            cacheBedwarsLevelFromTab(uuid, info);
+
+            HypixelAPI api = AstroClient.INSTANCE.getHypixelAPI();
+            if (api.hasKey()) {
+                api.getBedwarsLevel(uuid);
+                api.getHypixelLevel(uuid);
+            }
         }
     }
 
@@ -224,7 +238,14 @@ public final class LevelHead extends Module {
 
     private String buildTabText(UUID uuid, String name) {
         int bedwarsLevel = bedwarsLevelCache.containsKey(uuid) ? bedwarsLevelCache.get(uuid) : -1;
-        int hypixelLevel = hypixelLevelCache.containsKey(uuid) ? hypixelLevelCache.get(uuid) : -1;
+        int hypixelLevel = -1;
+
+        HypixelAPI api = AstroClient.INSTANCE.getHypixelAPI();
+        if (api.hasKey()) {
+            int apiBedwarsLevel = api.peekBedwarsLevel(uuid);
+            if (apiBedwarsLevel >= 0) bedwarsLevel = apiBedwarsLevel;
+            hypixelLevel = api.peekHypixelLevel(uuid);
+        }
 
         if (bedwarsLevel < 0 && hypixelLevel < 0) return null;
 
@@ -302,16 +323,14 @@ public final class LevelHead extends Module {
 
         HypixelAPI api = AstroClient.INSTANCE.getHypixelAPI();
         if (api.hasKey()) {
-            int apiLevel = api.getBedwarsLevel(uuid);
+            int apiLevel = api.peekBedwarsLevel(uuid);
             if (apiLevel >= 0) return apiLevel;
         }
 
         if (bedwarsLevelCache.containsKey(uuid)) {
             return bedwarsLevelCache.get(uuid);
         }
-        int level = parseLevelFromTab(player);
-        bedwarsLevelCache.put(uuid, level);
-        return level;
+        return cacheBedwarsLevelFromTab(player);
     }
 
     private int getHypixelLevel(EntityPlayer player) {
@@ -319,17 +338,28 @@ public final class LevelHead extends Module {
 
         HypixelAPI api = AstroClient.INSTANCE.getHypixelAPI();
         if (api.hasKey()) {
-            int apiLevel = api.getHypixelLevel(uuid);
-            if (apiLevel >= 0) return apiLevel;
+            return api.peekHypixelLevel(uuid);
         }
         return -1;
     }
 
-    private int parseLevelFromTab(EntityPlayer player) {
+    private int cacheBedwarsLevelFromTab(EntityPlayer player) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.getNetHandler() == null) return -1;
 
         NetworkPlayerInfo info = mc.getNetHandler().getPlayerInfo(player.getUniqueID());
+        if (info == null) return -1;
+
+        return cacheBedwarsLevelFromTab(player.getUniqueID(), info);
+    }
+
+    private int cacheBedwarsLevelFromTab(UUID uuid, NetworkPlayerInfo info) {
+        int level = parseLevelFromTab(info);
+        bedwarsLevelCache.put(uuid, level);
+        return level;
+    }
+
+    private int parseLevelFromTab(NetworkPlayerInfo info) {
         if (info == null) return -1;
 
         String raw = null;
@@ -446,7 +476,7 @@ public final class LevelHead extends Module {
     }
 
     public String getInlineDisplay(EntityPlayer player) {
-        if (!isEnabled() || player == null) return null;
+        if (!isEnabled() || !inGame || player == null) return null;
 
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.theWorld == null) return null;
