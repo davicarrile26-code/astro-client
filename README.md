@@ -1,6 +1,6 @@
-# AstroClient
+# FIRED Client
 
-AstroClient is a Forge 1.8.9 client mod for Minecraft focused on Bedwars HUDs, quality-of-life toggles, and client-side visual customization. Fully vibe coded with Opus 4.6 and GPT5.4/5.
+FIRED Client is a Forge 1.8.9 client mod for Minecraft focused on Bedwars HUDs, quality-of-life toggles, and client-side visual customization. Fully vibe coded with Opus 4.6 and GPT5.4/5.
 
 ## Overview
 
