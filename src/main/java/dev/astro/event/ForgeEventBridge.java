@@ -8,7 +8,6 @@ import dev.astro.event.events.TickEvent;
 import dev.astro.ui.ClickGUI;
 import dev.astro.ui.CustomMainMenu;
 import dev.astro.ui.HUDEditor;
-import dev.astro.ui.LoadingScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.util.ChatComponentText;
@@ -86,19 +85,11 @@ public final class ForgeEventBridge {
         }
     }
 
-    /** Whether the initial loading splash has been shown. */
-    private boolean splashShown = false;
-
-    /** Replace the vanilla title screen with our custom one (loading splash on first open). */
+    /** Replace the vanilla title screen with the FIRED main menu. */
     @SubscribeEvent
     public void onGuiOpen(GuiOpenEvent event) {
         if (event.gui instanceof GuiMainMenu) {
-            if (!splashShown) {
-                splashShown = true;
-                event.gui = new LoadingScreen();
-            } else {
-                event.gui = new CustomMainMenu();
-            }
+            event.gui = new CustomMainMenu();
         }
     }
 }
