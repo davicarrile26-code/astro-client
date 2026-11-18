@@ -26,7 +26,7 @@ import java.io.FileWriter;
 @Mod(modid = AstroClient.MOD_ID, name = AstroClient.NAME, version = AstroClient.VERSION)
 public class AstroClient {
 
-    public static final String MOD_ID  = "astroclient";
+    public static final String MOD_ID  = "firedclient";
     public static final String NAME    = "FIRED Client";
     public static final String VERSION = "1.0.0";
 
