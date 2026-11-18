@@ -7,12 +7,13 @@ import dev.astro.module.Module;
 import dev.astro.module.setting.BooleanSetting;
 import dev.astro.module.setting.NumberSetting;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.event.FOVUpdateEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 /**
- * Zoom — smoothly zooms in while KEY_Q is held.
- * Scroll wheel adjusts the zoom level while active.
+ * Smooth hold-to-zoom. The actual camera FOV is changed through Forge's
+ * FOVUpdateEvent instead of overwriting the user's saved FOV setting.
  */
 public final class Zoom extends Module {
 
@@ -25,8 +26,8 @@ public final class Zoom extends Module {
     private static final float LERP_SPEED = 0.3F;
 
     private float originalFov = 70.0F;
-    private float targetFov;
-    private float currentFov;
+    private float targetFov = 30.0F;
+    private float currentFov = 70.0F;
     private boolean wasZooming = false;
     private float originalSensitivity;
     private boolean originalSmoothCamera;
@@ -35,7 +36,7 @@ public final class Zoom extends Module {
         super("Zoom",
               "Smoothly zooms in while key is held. Scroll to adjust.",
               Category.RENDER,
-              Keyboard.KEY_Q);
+              Keyboard.KEY_C);
     }
 
     @Override
@@ -57,40 +58,35 @@ public final class Zoom extends Module {
         }
 
         boolean keyHeld = Keyboard.isKeyDown(getKeyBind());
-
-        if (keyHeld) {
-            if (!wasZooming) {
-                originalFov = mc.gameSettings.fovSetting;
-                originalSensitivity = mc.gameSettings.mouseSensitivity;
-                originalSmoothCamera = mc.gameSettings.smoothCamera;
-                currentFov = originalFov;
-                targetFov = defaultFov.getFloatValue();
-                wasZooming = true;
-                if (smoothCamera.getValue()) {
-                    mc.gameSettings.smoothCamera = true;
-                }
-            }
-
-            // Mouse scroll to adjust zoom level
-            float step = scrollStep.getFloatValue();
-            int wheel = Mouse.getDWheel();
-            if (wheel > 0) {
-                targetFov = Math.max(MIN_ZOOM_FOV, targetFov - step);
-            } else if (wheel < 0) {
-                targetFov = Math.min(MAX_ZOOM_FOV, targetFov + step);
-            }
-
-            // Smooth lerp toward target
-            currentFov = currentFov + (targetFov - currentFov) * LERP_SPEED;
-            mc.gameSettings.fovSetting = currentFov;
-
-            // Reduce sensitivity proportionally while zoomed
-            float fovRatio = currentFov / originalFov;
-            mc.gameSettings.mouseSensitivity = originalSensitivity * fovRatio;
-
-        } else {
+        if (!keyHeld) {
             resetZoom(mc);
+            return;
         }
+
+        if (!wasZooming) {
+            originalFov = mc.gameSettings.fovSetting;
+            originalSensitivity = mc.gameSettings.mouseSensitivity;
+            originalSmoothCamera = mc.gameSettings.smoothCamera;
+            currentFov = originalFov;
+            targetFov = defaultFov.getFloatValue();
+            wasZooming = true;
+            if (smoothCamera.getValue()) mc.gameSettings.smoothCamera = true;
+        }
+
+        int wheel = Mouse.getDWheel();
+        float step = scrollStep.getFloatValue();
+        if (wheel > 0) targetFov = Math.max(MIN_ZOOM_FOV, targetFov - step);
+        else if (wheel < 0) targetFov = Math.min(MAX_ZOOM_FOV, targetFov + step);
+
+        currentFov += (targetFov - currentFov) * LERP_SPEED;
+        mc.gameSettings.mouseSensitivity = originalSensitivity * (currentFov / Math.max(1.0F, originalFov));
+    }
+
+    /** Called from the Forge event bridge for every FOV calculation. */
+    public void applyFov(FOVUpdateEvent event) {
+        if (!wasZooming || event.getEntity() != Minecraft.getMinecraft().thePlayer) return;
+        float ratio = currentFov / Math.max(1.0F, originalFov);
+        event.setNewfov(event.getFov() * ratio);
     }
 
     @Override
@@ -100,11 +96,11 @@ public final class Zoom extends Module {
 
     private void resetZoom(Minecraft mc) {
         if (wasZooming) {
-            mc.gameSettings.fovSetting = originalFov;
             mc.gameSettings.mouseSensitivity = originalSensitivity;
             mc.gameSettings.smoothCamera = originalSmoothCamera;
             wasZooming = false;
         }
         targetFov = defaultFov.getFloatValue();
+        currentFov = originalFov;
     }
 }
