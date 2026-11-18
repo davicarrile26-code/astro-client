@@ -10,18 +10,15 @@ import net.minecraft.util.EnumChatFormatting;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * /astrokey <key> — Sets your Hypixel API key for LevelHead.
- * Key is saved to astroclient/apikey.txt (never in source code).
- */
+/** /firedkey <key> sets the Hypixel API key used by Level Head. */
 public class ApiKeyCommand extends CommandBase {
 
     @Override
-    public String getCommandName() { return "astrokey"; }
+    public String getCommandName() { return "firedkey"; }
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/astrokey <your-hypixel-api-key>";
+        return "/firedkey <your-hypixel-api-key>";
     }
 
     @Override
@@ -41,14 +38,14 @@ public class ApiKeyCommand extends CommandBase {
             if (AstroClient.INSTANCE.getHypixelAPI().hasKey()) {
                 String key = AstroClient.INSTANCE.getHypixelAPI().getApiKey();
                 sender.addChatMessage(new ChatComponentText(
-                        EnumChatFormatting.AQUA + "[FIRED Client] " + EnumChatFormatting.WHITE +
+                        EnumChatFormatting.RED + "[FIRED Client] " + EnumChatFormatting.WHITE +
                         "API key is set (" + key.substring(0, 8) + "...). Use " +
-                        EnumChatFormatting.YELLOW + "/astrokey <key>" + EnumChatFormatting.WHITE +
+                        EnumChatFormatting.YELLOW + "/firedkey <key>" + EnumChatFormatting.WHITE +
                         " to change it."));
             } else {
                 sender.addChatMessage(new ChatComponentText(
-                        EnumChatFormatting.AQUA + "[AstroClient] " + EnumChatFormatting.RED +
-                        "No API key set. Use " + EnumChatFormatting.YELLOW + "/astrokey <key>" +
+                        EnumChatFormatting.RED + "[FIRED Client] " + EnumChatFormatting.RED +
+                        "No API key set. Use " + EnumChatFormatting.YELLOW + "/firedkey <key>" +
                         EnumChatFormatting.RED + " — get one with " + EnumChatFormatting.GREEN +
                         "/api new" + EnumChatFormatting.RED + " on Hypixel."));
             }
@@ -56,10 +53,9 @@ public class ApiKeyCommand extends CommandBase {
         }
 
         String key = args[0].trim();
-        // Basic UUID format validation
         if (key.length() != 36 || key.split("-").length != 5) {
             sender.addChatMessage(new ChatComponentText(
-                    EnumChatFormatting.AQUA + "[AstroClient] " + EnumChatFormatting.RED +
+                    EnumChatFormatting.RED + "[FIRED Client] " + EnumChatFormatting.RED +
                     "Invalid key format. Run " + EnumChatFormatting.GREEN + "/api new" +
                     EnumChatFormatting.RED + " on Hypixel to get a valid key."));
             return;
@@ -67,7 +63,7 @@ public class ApiKeyCommand extends CommandBase {
 
         AstroClient.INSTANCE.getHypixelAPI().setApiKey(key);
         sender.addChatMessage(new ChatComponentText(
-                EnumChatFormatting.AQUA + "[AstroClient] " + EnumChatFormatting.GREEN +
-                "API key saved! LevelHead will now use the Hypixel API."));
+                EnumChatFormatting.RED + "[FIRED Client] " + EnumChatFormatting.GREEN +
+                "API key saved! Level Head will now use the Hypixel API."));
     }
 }
