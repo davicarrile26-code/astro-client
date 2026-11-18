@@ -16,8 +16,8 @@ import java.io.IOException;
  */
 public final class CustomMainMenu extends GuiScreen {
 
-    private static final int ACCENT      = 0xFF00C8FF;
-    private static final int ACCENT_END  = 0xFF7B61FF;
+    private static final int ACCENT      = 0xFFFF3B00;
+    private static final int ACCENT_END  = 0xFFFF8500;
     private static final int BTN_BG      = new Color(22, 22, 30, 230).getRGB();
     private static final int BTN_HOVER   = new Color(35, 35, 48, 240).getRGB();
     private static final int BTN_BORDER  = new Color(255, 255, 255, 25).getRGB();
