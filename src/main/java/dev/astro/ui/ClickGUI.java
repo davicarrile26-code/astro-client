@@ -67,10 +67,10 @@ public final class ClickGUI extends GuiScreen {
     private static final int CARD_BG        = 0xF01E1E28;
     private static final int CARD_HOVER     = 0xF02A2A36;
     private static final int TAB_ACTIVE_BG  = 0xFF3A3A4A;
-    private static final int ACCENT         = 0xFF5B8DEF;
+    private static final int ACCENT         = 0xFFFF4A00;
     private static final int TEXT_PRIMARY   = 0xFFE8E8F0;
     private static final int TEXT_SECONDARY = 0xFF888898;
-    private static final int TOGGLE_ON_COL  = 0xFF5B8DEF;
+    private static final int TOGGLE_ON_COL  = 0xFFFF4A00;
     private static final int TOGGLE_OFF_COL = 0xFF3A3A4A;
     private static final int TOGGLE_KNOB    = 0xFFFFFFFF;
     private static final int SEPARATOR      = 0x20FFFFFF;
