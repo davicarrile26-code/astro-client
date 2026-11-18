@@ -27,7 +27,7 @@ import java.io.FileWriter;
 public class AstroClient {
 
     public static final String MOD_ID  = "astroclient";
-    public static final String NAME    = "AstroClient";
+    public static final String NAME    = "FIRED Client";
     public static final String VERSION = "1.0.0";
 
     @Mod.Instance(MOD_ID)
@@ -72,7 +72,7 @@ public class AstroClient {
         // Hypixel API (reads key from astroclient/apikey.txt)
         hypixelAPI.init();
 
-        // AstroClient user detection
+        // Astro user detection
         astroUsers = new AstroUsers();
         astroUsers.init();
 
@@ -80,8 +80,8 @@ public class AstroClient {
         ClientCommandHandler.instance.registerCommand(new ApiKeyCommand());
 
         // Register keybinds through Forge's system
-        keyOpenGui = new KeyBinding("Open AstroClient GUI", Keyboard.KEY_RSHIFT, "AstroClient");
-        keyHudEditor = new KeyBinding("HUD Editor", Keyboard.KEY_H, "AstroClient");
+        keyOpenGui = new KeyBinding("Open FIRED Client GUI", Keyboard.KEY_RSHIFT, "FIRED Client");
+        keyHudEditor = new KeyBinding("HUD Editor", Keyboard.KEY_H, "FIRED Client");
         ClientRegistry.registerKeyBinding(keyOpenGui);
         ClientRegistry.registerKeyBinding(keyHudEditor);
 
