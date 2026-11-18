@@ -125,8 +125,11 @@ public final class ClickGUI extends GuiScreen {
     /** Panel bounds: {x, y, width, height}. */
     private int[] getPanelBounds() {
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-        int pw = Math.max(400, (int) (sr.getScaledWidth() * 0.7));
-        int ph = Math.max(300, (int) (sr.getScaledHeight() * 0.8));
+        // Keep the panel inside the actual game viewport, including small windowed modes.
+        int availableW = Math.max(1, sr.getScaledWidth() - 24);
+        int availableH = Math.max(1, sr.getScaledHeight() - 24);
+        int pw = Math.min(availableW, Math.max(260, (int) (sr.getScaledWidth() * 0.7)));
+        int ph = Math.min(availableH, Math.max(220, (int) (sr.getScaledHeight() * 0.8)));
         int px = (sr.getScaledWidth() - pw) / 2;
         int py = (sr.getScaledHeight() - ph) / 2;
         return new int[]{px, py, pw, ph};
