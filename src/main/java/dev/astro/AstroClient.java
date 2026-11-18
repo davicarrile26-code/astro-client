@@ -20,8 +20,8 @@ import java.io.File;
 import java.io.FileWriter;
 
 /**
- * AstroClient — a Forge 1.8.9 mod for Bedwars with a modular HUD
- * and clean ClickGUI.
+ * FIRED Client — a Forge 1.8.9 client with a modular HUD and ClickGUI.
+ * The legacy Java package and mod id are retained for compatibility.
  */
 @Mod(modid = AstroClient.MOD_ID, name = AstroClient.NAME, version = AstroClient.VERSION)
 public class AstroClient {
@@ -33,22 +33,18 @@ public class AstroClient {
     @Mod.Instance(MOD_ID)
     public static AstroClient INSTANCE;
 
-    private EventBus      eventBus;
+    private EventBus eventBus;
     private ModuleManager moduleManager;
     private ConfigManager configManager;
-    private HypixelAPI    hypixelAPI;
-    private AstroUsers    astroUsers;
-    private HUD           hud;
+    private HypixelAPI hypixelAPI;
+    private AstroUsers astroUsers;
+    private HUD hud;
 
-    /** Forge-registered keybinding for the ClickGUI (RIGHT_SHIFT). */
     public static KeyBinding keyOpenGui;
-
-    /** Forge-registered keybinding for the HUD Editor. */
     public static KeyBinding keyHudEditor;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        // Write AstroClient-branded Forge splash for next launch
         writeSplashProperties(event.getModConfigurationDirectory());
     }
 
@@ -56,72 +52,62 @@ public class AstroClient {
     public void init(FMLInitializationEvent event) {
         System.out.println("[" + NAME + "] Initialising v" + VERSION + "...");
 
-        eventBus      = new EventBus();
+        eventBus = new EventBus();
         moduleManager = new ModuleManager();
         configManager = new ConfigManager();
-        hypixelAPI    = new HypixelAPI();
-        hud           = new HUD();
+        hypixelAPI = new HypixelAPI();
+        hud = new HUD();
 
         eventBus.register(hud);
         moduleManager.init();
 
-        // Persistence
         configManager.init();
         configManager.load();
 
-        // Hypixel API (reads key from astroclient/apikey.txt)
         hypixelAPI.init();
 
-        // Astro user detection
         astroUsers = new AstroUsers();
         astroUsers.init();
 
-        // Register commands
         ClientCommandHandler.instance.registerCommand(new ApiKeyCommand());
 
-        // Register keybinds through Forge's system
         keyOpenGui = new KeyBinding("Open FIRED Client GUI", Keyboard.KEY_RSHIFT, "FIRED Client");
-        keyHudEditor = new KeyBinding("HUD Editor", Keyboard.KEY_H, "FIRED Client");
+        keyHudEditor = new KeyBinding("FIRED HUD Editor", Keyboard.KEY_H, "FIRED Client");
         ClientRegistry.registerKeyBinding(keyOpenGui);
         ClientRegistry.registerKeyBinding(keyHudEditor);
 
-        // Register the Forge-event bridge so our custom events fire
         MinecraftForge.EVENT_BUS.register(new dev.astro.event.ForgeEventBridge());
 
         System.out.println("[" + NAME + "] Loaded " +
                 moduleManager.getModules().size() + " modules.");
     }
 
-    public EventBus      getEventBus()      { return eventBus; }
+    public EventBus getEventBus() { return eventBus; }
     public ModuleManager getModuleManager() { return moduleManager; }
     public ConfigManager getConfigManager() { return configManager; }
-    public HypixelAPI    getHypixelAPI()    { return hypixelAPI; }
-    public AstroUsers    getAstroUsers()    { return astroUsers; }
-    public HUD           getHud()           { return hud; }
+    public HypixelAPI getHypixelAPI() { return hypixelAPI; }
+    public AstroUsers getAstroUsers() { return astroUsers; }
+    public HUD getHud() { return hud; }
 
-    /**
-     * Writes config/splash.properties with AstroClient-branded colours.
-     * Takes effect on the NEXT launch (Forge reads it before mods init).
-     */
     private void writeSplashProperties(File configDir) {
         File splash = new File(configDir, "splash.properties");
-        if (splash.exists()) return; // Don't overwrite user customizations
+        if (splash.exists()) return;
 
         try {
             if (!configDir.exists()) configDir.mkdirs();
-            FileWriter fw = new FileWriter(splash);
-            fw.write("# AstroClient branded Forge loading screen\n");
-            fw.write("background=0x08080E\n");
-            fw.write("font=0xFFFFFF\n");
-            fw.write("barBackground=0x1A1A24\n");
-            fw.write("barBorder=0x333344\n");
-            fw.write("barColor=0x00C8FF\n");
-            fw.write("logoOffset=0\n");
-            fw.write("rotate=true\n");
-            fw.close();
+            try (FileWriter fw = new FileWriter(splash)) {
+                fw.write("# FIRED Client loading screen\n");
+                fw.write("background=0x08080E\n");
+                fw.write("font=0xFFFFFF\n");
+                fw.write("barBackground=0x1A1A24\n");
+                fw.write("barBorder=0x542018\n");
+                fw.write("barColor=0xE84A24\n");
+                fw.write("logoOffset=0\n");
+                fw.write("rotate=true\n");
+            }
             System.out.println("[" + NAME + "] Wrote splash.properties (takes effect next launch)");
-        } catch (Exception e) {
-            // Non-critical, ignore
+        } catch (Exception ignored) {
+            // Non-critical.
         }
     }
 }
