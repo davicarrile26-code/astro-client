@@ -97,11 +97,11 @@ public class AstroClient {
             if (!configDir.exists()) configDir.mkdirs();
             try (FileWriter fw = new FileWriter(splash)) {
                 fw.write("# FIRED Client loading screen\n");
-                fw.write("background=0x08080E\n");
+                fw.write("background=0x080604\n");
                 fw.write("font=0xFFFFFF\n");
-                fw.write("barBackground=0x1A1A24\n");
-                fw.write("barBorder=0x542018\n");
-                fw.write("barColor=0xE84A24\n");
+                fw.write("barBackground=0x24110D\n");
+                fw.write("barBorder=0x7A2B12\n");
+                fw.write("barColor=0xFF4A00\n");
                 fw.write("logoOffset=0\n");
                 fw.write("rotate=true\n");
             }
