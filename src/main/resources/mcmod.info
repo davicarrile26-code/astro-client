@@ -1,6 +1,6 @@
 [
   {
-    "modid": "astroclient",
+    "modid": "firedclient",
     "name": "FIRED Client",
     "description": "FIRED Client: a Bedwars client with HUD modules and a modern ClickGUI.",
     "version": "1.0.0",
