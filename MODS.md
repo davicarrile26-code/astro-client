@@ -1,8 +1,8 @@
-# AstroClient Module Reference
+# FIRED Client Module Reference
 
 > **Version:** 1.0.0 · **Minecraft:** 1.8.9 Forge · **Modules:** 39 · **Typed Settings:** 72
 
-AstroClient is a Forge 1.8.9 client focused on Bedwars QoL, HUD overlays, and client-side rendering tweaks. Modules are managed centrally by `ModuleManager`, enabled through the ClickGUI, and persisted to `.minecraft/astroclient/config.json`.
+FIRED Client is a Forge 1.8.9 client focused on Bedwars QoL, HUD overlays, and client-side rendering tweaks. Modules are managed centrally by `ModuleManager`, enabled through the ClickGUI, and persisted to `.minecraft/astroclient/config.json`.
 
 ## Controls & UI
 
