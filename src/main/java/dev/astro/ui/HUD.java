@@ -14,8 +14,8 @@ import net.minecraft.client.gui.FontRenderer;
  */
 public final class HUD {
 
-    private static final int ACCENT     = 0xFF00C8FF;
-    private static final int ACCENT_END = 0xFF7B61FF;
+    private static final int ACCENT     = 0xFFFF3B00;
+    private static final int ACCENT_END = 0xFFFF8500;
 
     @EventTarget
     public void onRender(Render2DEvent event) {
