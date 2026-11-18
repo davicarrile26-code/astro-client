@@ -191,6 +191,15 @@ public final class ClickGUI extends GuiScreen {
                 py + (HEADER_H - fr.FONT_HEIGHT) / 2f,
                 settingsHover ? ACCENT : TEXT_SECONDARY);
 
+        // Quick access to the draggable HUD editor.
+        String hudBtn = "HUD";
+        int hudBtnX = right - 42;
+        boolean hudHover = mouseX >= right - 48 && mouseX < right - 18
+                && mouseY >= py && mouseY < py + HEADER_H;
+        fr.drawStringWithShadow(hudBtn, hudBtnX,
+                py + (HEADER_H - fr.FONT_HEIGHT) / 2f,
+                hudHover ? ACCENT : TEXT_SECONDARY);
+
         // Close button "x" top-right
         String closeBtn = "x";
         int closeBtnW = fr.getStringWidth(closeBtn);
@@ -499,6 +508,13 @@ public final class ClickGUI extends GuiScreen {
             return;
         }
 
+        // ── HUD editor shortcut ────────────────────────────────────────
+        if (btn == 0 && mouseX >= right - 48 && mouseX < right - 18
+                && mouseY >= py && mouseY < py + HEADER_H) {
+            mc.displayGuiScreen(new HUDEditor());
+            return;
+        }
+
         // ── Close button ───────────────────────────────────────────────
         if (btn == 0) {
             int closeBtnW = fr.getStringWidth("x");
@@ -564,7 +580,12 @@ public final class ClickGUI extends GuiScreen {
                 if (mouseX >= cardX && mouseX < cardRight
                  && mouseY >= Math.max(cardTop, listTopY)
                  && mouseY < Math.min(cardBot, listBottom)) {
-                    if (btn == 0) {
+                    int toggleX = cardRight - TOGGLE_W - 10;
+                    boolean settingsHit = mod.hasSettings()
+                            && mouseX >= toggleX - 30 && mouseX < toggleX - 2;
+                    if (settingsHit && btn == 0) {
+                        expandedModule = (expandedModule == mod) ? null : mod;
+                    } else if (btn == 0) {
                         mod.toggle();
                     } else if (mod.hasSettings()) {
                         expandedModule = (expandedModule == mod) ? null : mod;
