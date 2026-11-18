@@ -70,6 +70,9 @@ public class AstroClient {
 
         MinecraftForge.EVENT_BUS.register(new dev.astro.event.ForgeEventBridge());
 
+        // Bootstrap the Forge-backed event facade used by the ezclient port.
+        eu.ezclient.forge.ForgeClientAdapter.initialize();
+
         System.out.println("[" + NAME + "] Loaded " +
                 moduleManager.getModules().size() + " modules.");
     }
