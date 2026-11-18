@@ -30,7 +30,7 @@ public final class AstroUsers {
 
     private static final String CHANNEL = "AC|Hello";
     private static final byte[] HELLO = {0x41, 0x43}; // "AC"
-    private static final String TAB_PREFIX = "\u00a7cF \u00a7r";
+    private static final String TAB_PREFIX = "\u00a7c\u25a0\u00a7fF\u00a7r ";
     private static final long HELLO_INTERVAL_MS = 5000L;
     private static final long TAB_REFRESH_INTERVAL_MS = 1000L;
 
