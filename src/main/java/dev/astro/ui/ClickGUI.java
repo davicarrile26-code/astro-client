@@ -12,6 +12,7 @@ import dev.astro.util.RenderUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 
@@ -180,6 +181,15 @@ public final class ClickGUI extends GuiScreen {
         GlStateManager.scale(titleScale, titleScale, 1f);
         fr.drawStringWithShadow(title, 0, 0, TEXT_PRIMARY);
         GlStateManager.popMatrix();
+
+        // Settings shortcut on the left opens Minecraft's full video/performance options.
+        String settingsBtn = "⚙";
+        int settingsBtnX = px + 10;
+        boolean settingsHover = mouseX >= px + 4 && mouseX <= px + 28
+                             && mouseY >= py && mouseY < py + HEADER_H;
+        fr.drawStringWithShadow(settingsBtn, settingsBtnX,
+                py + (HEADER_H - fr.FONT_HEIGHT) / 2f,
+                settingsHover ? ACCENT : TEXT_SECONDARY);
 
         // Close button "x" top-right
         String closeBtn = "x";
@@ -481,6 +491,13 @@ public final class ClickGUI extends GuiScreen {
         int right = px + pw;
         int bottom = py + ph;
         FontRenderer fr = mc.fontRendererObj;
+
+        // ── Client/video settings shortcut ─────────────────────────────
+        if (btn == 0 && mouseX >= px + 4 && mouseX <= px + 28
+                && mouseY >= py && mouseY < py + HEADER_H) {
+            mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings));
+            return;
+        }
 
         // ── Close button ───────────────────────────────────────────────
         if (btn == 0) {
