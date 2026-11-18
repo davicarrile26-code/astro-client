@@ -2,7 +2,7 @@
 
 > **Version:** 1.0.0 · **Minecraft:** 1.8.9 Forge · **Modules:** 39 · **Typed Settings:** 72
 
-FIRED Client is a Forge 1.8.9 client focused on Bedwars QoL, HUD overlays, and client-side rendering tweaks. Modules are managed centrally by `ModuleManager`, enabled through the ClickGUI, and persisted to `.minecraft/astroclient/config.json`.
+FIRED Client is a Forge 1.8.9 client focused on Bedwars QoL, HUD overlays, and client-side rendering tweaks. Modules are managed centrally by `ModuleManager`, enabled through the ClickGUI, and persisted to `.minecraft/firedclient/config.json`.
 
 ## Controls & UI
 
@@ -85,11 +85,11 @@ HUD modules are draggable and use the shared `Element Scale` setting from `HUDMo
 
 | Command | Alias | Purpose |
 |---|---|---|
-| `/astrokey <key>` | `/setapikey` | Stores the Hypixel API key used by `Level Head` |
+| `/firedkey <key>` | `/setapikey` | Stores the Hypixel API key used by `Level Head` |
 
 ## Settings & Persistence
 
-- Module enable state, keybinds, visibility, HUD positions, and typed settings are saved in `.minecraft/astroclient/config.json`.
+- Module enable state, keybinds, visibility, HUD positions, and typed settings are saved in `.minecraft/firedclient/config.json`.
 - Typed settings use the shared `Setting` hierarchy: `BooleanSetting`, `NumberSetting`, `ModeSetting`, and `ColorSetting`.
 - Modules that implement `ConfigManager.Configurable` also persist custom fields in the same JSON entry.
 - `Zoom` and `Freelook` are hold modules, so their enabled state is not persisted the same way as toggle modules.
@@ -97,7 +97,7 @@ HUD modules are draggable and use the shared `Element Scale` setting from `HUDMo
 
 ## Notes
 
-- `Level Head` uses the Hypixel API key stored by `/astrokey`.
-- `Nametags` adds the AstroClient user marker for players detected through the Astro client channel.
-- Detected Astro users are also marked in the tab list beside their name.
+- `Level Head` uses the Hypixel API key stored by `/firedkey`.
+- `Nametags` adds the FIRED F marker for players detected through the Astro client channel.
+- Detected FIRED users are also marked in the tab list beside their name.
 - `Scoreboard` temporarily suppresses the vanilla sidebar and re-renders it with its own scale and filters.
