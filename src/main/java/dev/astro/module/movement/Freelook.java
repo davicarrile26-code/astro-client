@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraft.client.entity.EntityPlayerSP;
 import org.lwjgl.input.Keyboard;
+import java.lang.reflect.Field;
 
 /**
  * Freelook — decouples camera rotation from player movement direction
@@ -83,8 +84,18 @@ public final class Freelook extends Module {
     /** Apply the independent camera angles during Forge's camera setup. */
     public void applyCamera(EntityViewRenderEvent.CameraSetup event) {
         if (!active) return;
-        event.setYaw(cameraYaw + 180.0F);
-        event.setPitch(cameraPitch);
+        // Forge 1.8.9 exposes CameraSetup angles as private fields (no setters).
+        // Keep this compatible with the exact legacy API used by this client.
+        try {
+            Field yawField = event.getClass().getDeclaredField("yaw");
+            Field pitchField = event.getClass().getDeclaredField("pitch");
+            yawField.setAccessible(true);
+            pitchField.setAccessible(true);
+            yawField.setFloat(event, cameraYaw + 180.0F);
+            pitchField.setFloat(event, cameraPitch);
+        } catch (Exception ignored) {
+            // Do not crash rendering if another Forge mapping changes these fields.
+        }
     }
 
     @Override
