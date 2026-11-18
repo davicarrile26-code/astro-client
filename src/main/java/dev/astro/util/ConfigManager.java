@@ -10,70 +10,52 @@ import net.minecraft.client.Minecraft;
 import java.io.*;
 import java.util.List;
 
-/**
- * Saves and loads all module state to a JSON file in .minecraft/astroclient/config.json.
- *
- * Persisted per module:
- *   - enabled state
- *   - key bind
- *   - visible flag
- *   - renderX / renderY (for HUDModules)
- *   - custom options (modules can override saveCustom / loadCustom)
- */
+/** Persists module state in .minecraft/firedclient/config.json. */
 public final class ConfigManager {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private File configDir;
     private File configFile;
-
-    /** Suppresses auto-save in Module.setEnabled() during config load. */
+    private File legacyConfigFile;
     private boolean loading;
 
     public void init() {
-        configDir  = new File(Minecraft.getMinecraft().mcDataDir, "astroclient");
+        File mcDir = Minecraft.getMinecraft().mcDataDir;
+        configDir = new File(mcDir, "firedclient");
         configFile = new File(configDir, "config.json");
-
-        if (!configDir.exists()) {
-            configDir.mkdirs();
-        }
+        legacyConfigFile = new File(new File(mcDir, "astroclient"), "config.json");
+        if (!configDir.exists()) configDir.mkdirs();
     }
 
-    /** True while loading config — modules should not auto-save during this time. */
     public boolean isLoading() { return loading; }
 
-    /** Load config from disk. Call after all modules are registered. */
     public void load() {
-        if (!configFile.exists()) return;
+        File source = configFile.exists() ? configFile :
+                (legacyConfigFile.exists() ? legacyConfigFile : configFile);
+        if (!source.exists()) return;
 
         loading = true;
-        boolean needsSave = false;
-        try (Reader reader = new FileReader(configFile)) {
+        boolean needsSave = !source.equals(configFile);
+        try (Reader reader = new FileReader(source)) {
             JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
 
             for (Module mod : AstroClient.INSTANCE.getModuleManager().getModules()) {
                 if (!root.has(mod.getName())) continue;
                 JsonObject obj = root.getAsJsonObject(mod.getName());
 
-                // Load keybind and visibility first
                 if (obj.has("keyBind")) {
                     int keyBind = obj.get("keyBind").getAsInt();
                     mod.setKeyBind(keyBind);
-                    if (mod.getKeyBind() != keyBind) {
-                        needsSave = true;
-                    }
+                    if (mod.getKeyBind() != keyBind) needsSave = true;
                 }
-                if (obj.has("visible")) {
-                    mod.setVisible(obj.get("visible").getAsBoolean());
-                }
+                if (obj.has("visible")) mod.setVisible(obj.get("visible").getAsBoolean());
 
-                // Load HUD position before enable
                 if (mod instanceof HUDModule) {
                     HUDModule hud = (HUDModule) mod;
                     if (obj.has("renderX")) hud.setRenderX(obj.get("renderX").getAsInt());
                     if (obj.has("renderY")) hud.setRenderY(obj.get("renderY").getAsInt());
                 }
 
-                // Load settings BEFORE enabling so onEnable sees correct values
                 if (obj.has("settings")) {
                     JsonObject settingsObj = obj.getAsJsonObject("settings");
                     for (Setting<?> setting : mod.getSettings()) {
@@ -83,14 +65,9 @@ public final class ConfigManager {
                     }
                 }
 
-                // Legacy Configurable support
-                if (mod instanceof Configurable) {
-                    ((Configurable) mod).loadConfig(obj);
-                }
+                if (mod instanceof Configurable) ((Configurable) mod).loadConfig(obj);
 
-                // Now enable if saved as enabled
-                if (mod.shouldPersistEnabledState()
-                        && obj.has("enabled")
+                if (mod.shouldPersistEnabledState() && obj.has("enabled")
                         && obj.get("enabled").getAsBoolean()) {
                     mod.setEnabled(true);
                 }
@@ -103,12 +80,9 @@ public final class ConfigManager {
             loading = false;
         }
 
-        if (needsSave) {
-            save();
-        }
+        if (needsSave) save();
     }
 
-    /** Save all module state to disk. */
     public void save() {
         JsonObject root = new JsonObject();
 
@@ -124,7 +98,6 @@ public final class ConfigManager {
                 obj.addProperty("renderY", hud.getRenderY());
             }
 
-            // Auto-save typed settings
             if (mod.hasSettings()) {
                 JsonObject settingsObj = new JsonObject();
                 for (Setting<?> setting : mod.getSettings()) {
@@ -133,11 +106,7 @@ public final class ConfigManager {
                 obj.add("settings", settingsObj);
             }
 
-            // Legacy Configurable support
-            if (mod instanceof Configurable) {
-                ((Configurable) mod).saveConfig(obj);
-            }
-
+            if (mod instanceof Configurable) ((Configurable) mod).saveConfig(obj);
             root.add(mod.getName(), obj);
         }
 
@@ -148,10 +117,8 @@ public final class ConfigManager {
         }
     }
 
-    /** Interface for modules with extra settings. */
     public interface Configurable {
         void saveConfig(JsonObject obj);
         void loadConfig(JsonObject obj);
     }
-
 }
