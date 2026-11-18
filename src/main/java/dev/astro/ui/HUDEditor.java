@@ -34,16 +34,16 @@ public final class HUDEditor extends GuiScreen {
     private static final int GUIDE_LINE       = 0x30FFFFFF;
     private static final int GUIDE_ACTIVE     = 0x80FFFFFF;
     private static final int GRID_DOT         = 0x18FFFFFF;
-    private static final int OUTLINE_NORMAL   = 0xCC5B8DEF;
-    private static final int OUTLINE_DRAG     = 0xCC4ADE80;
-    private static final int FILL_HOVER       = 0x205B8DEF;
-    private static final int FILL_DRAG        = 0x204ADE80;
+    private static final int OUTLINE_NORMAL   = 0xCCFF4A00;
+    private static final int OUTLINE_DRAG     = 0xCCFF8A24;
+    private static final int FILL_HOVER       = 0x30FF4A00;
+    private static final int FILL_DRAG        = 0x30FF8A24;
     private static final int TOOLTIP_BG       = 0xE0101018;
     private static final int TOOLTIP_TEXT     = 0xFFE8E8F0;
     private static final int BAR_BG           = 0xD0101018;
-    private static final int BAR_ACCENT       = 0xFF5B8DEF;
+    private static final int BAR_ACCENT       = 0xFFFF4A00;
     private static final int DONE_BTN_BG      = 0xFF5B8DEF;
-    private static final int DONE_BTN_HOVER   = 0xFF7BA5FF;
+    private static final int DONE_BTN_HOVER   = 0xFFFF8A24;
     private static final int DONE_BTN_TEXT    = 0xFFFFFFFF;
     private static final int BAR_DIM_TEXT     = 0xFF666680;
 
