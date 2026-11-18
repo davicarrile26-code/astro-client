@@ -90,7 +90,7 @@ public final class LoadingScreen extends GuiScreen {
             float nameW = fr.getStringWidth(name);
 
             float px = cx / finalScale - nameW / 2f;
-            float py = (cy - 40) / finalScale;
+            float py = (cy - 65) / finalScale;
 
             GlStateManager.scale(finalScale, finalScale, 1.0f);
             int logoAlpha = (int) (255 * screenAlpha);
@@ -104,7 +104,7 @@ public final class LoadingScreen extends GuiScreen {
         float lineProgress = Math.min(1.0f, eased * 2.5f);
         int drawnW = (int) (lineW * lineProgress);
         int lineX = cx - drawnW / 2;
-        int lineY = cy - 8;
+        int lineY = cy - 28;
         if (drawnW > 0) {
             RenderUtil.drawGradientH(lineX, lineY, lineX + drawnW, lineY + 2,
                     applyAlpha(ACCENT, screenAlpha), applyAlpha(ACCENT_END, screenAlpha));
@@ -150,7 +150,7 @@ public final class LoadingScreen extends GuiScreen {
         // ── Título de carregamento ─────────────────────────────────
         String loading = "INICIANDO FIRED CLIENT...";
         int loadingCol = ((int) (230 * screenAlpha) << 24) | 0x00FFFFFF;
-        fr.drawStringWithShadow(loading, cx - fr.getStringWidth(loading) / 2f, barY - 34, loadingCol);
+        fr.drawStringWithShadow(loading, cx - fr.getStringWidth(loading) / 2f, barY - 26, loadingCol);
 
         // ── Status text ───────────────────────────────────────────
         int tipIdx = Math.min((int) (eased * TIPS.length), TIPS.length - 1);
