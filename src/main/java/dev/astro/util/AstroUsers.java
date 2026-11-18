@@ -20,21 +20,21 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Detects other AstroClient users on the same server.
+ * Detects other FIRED Client users on the same server.
  *
  * Sends and listens on a lightweight Forge plugin channel. Compatible servers
  * can forward these packets so clients can identify one another. Recognized
- * players get the Astro marker in nametags and the tab list.
+ * players get the FIRED marker in nametags and the tab list.
  */
 public final class AstroUsers {
 
     private static final String CHANNEL = "AC|Hello";
     private static final byte[] HELLO = {0x41, 0x43}; // "AC"
-    private static final String TAB_PREFIX = "\u00a7b\u26A1 \u00a7r";
+    private static final String TAB_PREFIX = "\u00a7cF \u00a7r";
     private static final long HELLO_INTERVAL_MS = 5000L;
     private static final long TAB_REFRESH_INTERVAL_MS = 1000L;
 
-    /** Players detected as AstroClient users this session. */
+    /** Players detected as FIRED Client users this session. */
     private final Set<UUID> detected = Collections.newSetFromMap(new ConcurrentHashMap<UUID, Boolean>());
 
     private FMLEventChannel channel;
@@ -45,10 +45,10 @@ public final class AstroUsers {
         channel = NetworkRegistry.INSTANCE.newEventDrivenChannel(CHANNEL);
         channel.register(this);
         FMLCommonHandler.instance().bus().register(this);
-        System.out.println("[AstroClient] User detection ready");
+        System.out.println("[FIRED Client] User detection ready");
     }
 
-    /** Check if a player is a known AstroClient user. */
+    /** Check if a player is a known FIRED Client user. */
     public boolean isAstroUser(UUID uuid) {
         return detected.contains(uuid);
     }
