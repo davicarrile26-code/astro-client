@@ -37,13 +37,23 @@ public final class HypixelAPI {
     private File keyFile;
 
     /**
-     * Initialise — reads API key from astroclient/apikey.txt
+     * Initialise — reads the FIRED API key from firedclient/apikey.txt (with legacy migration)
      */
     public void init() {
         File mcDir = Minecraft.getMinecraft().mcDataDir;
-        File dir = new File(mcDir, "astroclient");
+        File dir = new File(mcDir, "firedclient");
         if (!dir.exists()) dir.mkdirs();
         keyFile = new File(dir, "apikey.txt");
+        File legacyKeyFile = new File(new File(mcDir, "astroclient"), "apikey.txt");
+        if (!keyFile.exists() && legacyKeyFile.exists()) {
+            try (InputStream in = new FileInputStream(legacyKeyFile); OutputStream out = new FileOutputStream(keyFile)) {
+                byte[] buffer = new byte[1024];
+                int read;
+                while ((read = in.read(buffer)) != -1) out.write(buffer, 0, read);
+            } catch (Exception e) {
+                System.err.println("[FIRED Client] Could not migrate the old API key: " + e.getMessage());
+            }
+        }
 
         if (keyFile.exists()) {
             try {
@@ -54,14 +64,14 @@ public final class HypixelAPI {
                     apiKey = line.trim();
                 }
             } catch (Exception e) {
-                System.err.println("[AstroClient] Failed to read API key: " + e.getMessage());
+                System.err.println("[FIRED Client] Failed to read API key: " + e.getMessage());
             }
         }
 
         if (apiKey != null) {
-            System.out.println("[AstroClient] Hypixel API key loaded (" + apiKey.substring(0, 8) + "...)");
+            System.out.println("[FIRED Client] Hypixel API key loaded (" + apiKey.substring(0, 8) + "...)");
         } else {
-            System.out.println("[AstroClient] No Hypixel API key set. Use /astrokey <key> in-game.");
+            System.out.println("[FIRED Client] No Hypixel API key set. Use /firedkey <key> in-game.");
         }
     }
 
@@ -78,7 +88,7 @@ public final class HypixelAPI {
             fw.write(key);
             fw.close();
         } catch (Exception e) {
-            System.err.println("[AstroClient] Failed to save API key: " + e.getMessage());
+            System.err.println("[FIRED Client] Failed to save API key: " + e.getMessage());
         }
     }
 
@@ -172,7 +182,7 @@ public final class HypixelAPI {
                         }
                     } else if (code == 429) {
                         // Rate limited — back off
-                        System.out.println("[AstroClient] Hypixel API rate limited, backing off");
+                        System.out.println("[FIRED Client] Hypixel API rate limited, backing off");
                     }
                     conn.disconnect();
                 } catch (Exception e) {
