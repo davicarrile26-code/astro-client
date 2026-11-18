@@ -50,6 +50,7 @@ public final class ClickGUI extends GuiScreen {
 
     private Category selectedCategory;
     private String searchQuery = "";
+    private boolean searchFocused = true;
     private Module settingsModule;
     private NumberSetting draggingSlider;
     private final Map<String, Integer> scrollOffsets = new HashMap<String, Integer>();
@@ -240,22 +241,11 @@ public final class ClickGUI extends GuiScreen {
         if(button==0 && my>=y && my<y+HEADER_H){
             if(mx>=right-36){mc.displayGuiScreen(null);return;}
             if(mx>=right-82 && mx<right-40){mc.displayGuiScreen(new HUDEditor());return;}
-            if(mx>=x+SIDEBAR_W+20 && mx<right-90){return;}
-            if(mx>=x+SIDEBAR_W+12 && mx<right-90){return;}
-            if(mx>=x+SIDEBAR_W+12 && my>=y+8){return;}
-            if(mx>=x+SIDEBAR_W && my>=y+8 && my<=y+35){return;}
-            if(mx>=x+SIDEBAR_W+10 && mx<right-90){return;}
-            if(mx>=x+SIDEBAR_W+8 && mx<right-90){return;}
-            if(mx>=x+SIDEBAR_W+10 && mx<right-80){return;}
-            if(mx>=x+SIDEBAR_W+5 && mx<right-85){return;}
-            if(mx>=x+SIDEBAR_W+15 && mx<right-85){return;}
-            if(mx>=x+SIDEBAR_W+5 && mx<right-90){return;}
-            if(mx>=x+SIDEBAR_W+8 && mx<right-85){return;}
-            if(mx>=x+SIDEBAR_W+5 && mx<right-100){return;}
-            if(mx>=x+SIDEBAR_W+8 && mx<right-100){return;}
-            if(mx>=x+SIDEBAR_W+5 && mx<right-110){return;}
-            if(mx>=x+SIDEBAR_W+8 && mx<right-110){return;}
+            int searchW=Math.max(95,Math.min(270,w-230));
+            int searchX=x+(w-searchW)/2;
+            searchFocused=mx>=searchX && mx<=searchX+searchW;
             if(mx>=x+4 && mx<x+30){mc.displayGuiScreen(new GuiOptions(this,mc.gameSettings));return;}
+            return;
         }
         if(settingsModule!=null){
             int pw=Math.min(270,w-30),ph=Math.min(h-50,70+settingsModule.getSettings().size()*24);
@@ -303,7 +293,7 @@ public final class ClickGUI extends GuiScreen {
             int col=i%cols,row=i/cols,cx=contentX+col*(cardW+GAP),cy=gridY+row*(CARD_H+GAP)-scroll;
             if(mx<cx||mx>=cx+cardW||my<cy||my>=cy+CARD_H)continue;
             Module m=mods.get(i);
-            if(m.hasSettings() && mx>=cx+cardW-36){settingsModule=m;return;}
+            if(m.hasSettings() && mx>=cx+cardW-36 && my>=cy+34){settingsModule=m;return;}
             m.toggle();return;
         }
     }
@@ -337,6 +327,7 @@ public final class ClickGUI extends GuiScreen {
     @Override
     protected void keyTyped(char c,int key)throws IOException{
         if(key==1){if(settingsModule!=null)settingsModule=null;else if(searchQuery.length()>0)searchQuery="";else mc.displayGuiScreen(null);return;}
+        if(!searchFocused)return;
         if(key==14){if(searchQuery.length()>0)searchQuery=searchQuery.substring(0,searchQuery.length()-1);return;}
         if(c>=' '&&c<127)searchQuery+=c;
     }
