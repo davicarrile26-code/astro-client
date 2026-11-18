@@ -15,12 +15,12 @@ import net.minecraft.client.renderer.GlStateManager;
  */
 public final class LoadingScreen extends GuiScreen {
 
-    private static final int BG           = 0xFF08080E;
-    private static final int ACCENT       = 0xFF00C8FF;
-    private static final int ACCENT_END   = 0xFF7B61FF;
-    private static final int BAR_BG       = 0xFF1A1A24;
-    private static final int TEXT_DIM     = 0xFF555566;
-    private static final int TEXT_SUB     = 0xFF888899;
+    private static final int BG           = 0xFF070607;
+    private static final int ACCENT       = 0xFFFF2D00;
+    private static final int ACCENT_END   = 0xFFFF8500;
+    private static final int BAR_BG       = 0xFF24110D;
+    private static final int TEXT_DIM     = 0xFF9B8580;
+    private static final int TEXT_SUB     = 0xFFBFA9A2;
 
     /** Total duration of the splash in milliseconds. */
     private static final long DURATION_MS = 2800L;
@@ -32,10 +32,10 @@ public final class LoadingScreen extends GuiScreen {
 
     /** Loading tips / status messages cycled through. */
     private static final String[] TIPS = {
-        "Loading modules...",
-        "Preparing HUD...",
-        "Initialising settings...",
-        "Almost ready..."
+        "Preparando o Minecraft...",
+        "Carregando mods...",
+        "Inicializando recursos...",
+        "Quase pronto..."
     };
 
     @Override
@@ -71,7 +71,7 @@ public final class LoadingScreen extends GuiScreen {
 
         // Subtle top glow
         int glowAlpha = (int) (20 * screenAlpha);
-        int glowCol = (glowAlpha << 24) | 0x00C8FF;
+        int glowCol = (glowAlpha << 24) | 0x00FF4A00;
         drawGradientRect(this.width / 2 - 150, 0, this.width / 2 + 150, 80, glowCol, 0x00000000);
 
         FontRenderer fr = mc.fontRendererObj;
@@ -86,7 +86,7 @@ public final class LoadingScreen extends GuiScreen {
             float animScale = 0.92f + 0.08f * Math.min(1.0f, eased * 3.0f);
             float finalScale = logoScale * animScale;
 
-            String name = AstroClient.NAME;
+            String name = "FIRED";
             float nameW = fr.getStringWidth(name);
 
             float px = cx / finalScale - nameW / 2f;
@@ -137,9 +137,20 @@ public final class LoadingScreen extends GuiScreen {
         if (fillW > 2) {
             int dotX = barX + fillW - 1;
             int dotAlpha = (int) (180 * screenAlpha);
-            int dotCol = (dotAlpha << 24) | 0x00C8FF;
+            int dotCol = (dotAlpha << 24) | 0x00FF4A00;
             RenderUtil.drawRect(dotX - 1, barY - 1, dotX + 2, barY + barH + 1, dotCol);
         }
+
+        // ── Percentual ─────────────────────────────────────────────
+        String percent = ((int) (eased * 100)) + "%";
+        int percentAlpha = (int) (220 * screenAlpha);
+        int percentCol = (percentAlpha << 24) | 0x00FFFFFF;
+        fr.drawStringWithShadow(percent, cx - fr.getStringWidth(percent) / 2f, barY - 14, percentCol);
+
+        // ── Título de carregamento ─────────────────────────────────
+        String loading = "INICIANDO FIRED CLIENT...";
+        int loadingCol = ((int) (230 * screenAlpha) << 24) | 0x00FFFFFF;
+        fr.drawStringWithShadow(loading, cx - fr.getStringWidth(loading) / 2f, barY - 34, loadingCol);
 
         // ── Status text ───────────────────────────────────────────
         int tipIdx = Math.min((int) (eased * TIPS.length), TIPS.length - 1);
@@ -153,7 +164,7 @@ public final class LoadingScreen extends GuiScreen {
             int modCount = AstroClient.INSTANCE != null && AstroClient.INSTANCE.getModuleManager() != null
                     ? AstroClient.INSTANCE.getModuleManager().getModules().size() : 0;
             if (modCount > 0) {
-                String modText = modCount + " modules loaded";
+                String modText = modCount + " módulos carregados";
                 float modAlpha = Math.min(1.0f, (eased - 0.4f) * 3.0f) * screenAlpha;
                 int modCol = ((int)(modAlpha * 255) << 24) | (TEXT_SUB & 0x00FFFFFF);
                 fr.drawStringWithShadow(modText, cx - fr.getStringWidth(modText) / 2f, barY + 22, modCol);
@@ -184,7 +195,7 @@ public final class LoadingScreen extends GuiScreen {
             float py = cy + (float) Math.cos(t * 0.5 + seed * 1.7) * 50 - 20;
 
             float pAlpha = (float) (Math.sin(t * 1.3 + seed) * 0.5 + 0.5) * 0.3f * alpha;
-            int pCol = ((int)(pAlpha * 255) << 24) | 0x00C8FF;
+            int pCol = ((int)(pAlpha * 255) << 24) | (i % 2 == 0 ? 0x00FF3B00 : 0x00FF8500);
 
             float size = 1.0f + (float) Math.sin(seed * 3.0) * 0.5f;
             RenderUtil.drawRect(px - size, py - size, px + size, py + size, pCol);
