@@ -84,9 +84,10 @@ public final class Zoom extends Module {
 
     /** Called from the Forge event bridge for every FOV calculation. */
     public void applyFov(FOVUpdateEvent event) {
-        if (!wasZooming || event.getEntity() != Minecraft.getMinecraft().thePlayer) return;
+        // Forge 1.8.9 uses public fields rather than the newer accessor methods.
+        if (!wasZooming || event.entity != Minecraft.getMinecraft().thePlayer) return;
         float ratio = currentFov / Math.max(1.0F, originalFov);
-        event.setNewfov(event.getFov() * ratio);
+        event.newfov = event.fov * ratio;
     }
 
     @Override
