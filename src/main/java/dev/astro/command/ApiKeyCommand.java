@@ -7,7 +7,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 /** /firedkey <key> sets the Hypixel API key used by Level Head. */
@@ -29,7 +29,7 @@ public class ApiKeyCommand extends CommandBase {
 
     @Override
     public List<String> getCommandAliases() {
-        return Collections.singletonList("setapikey");
+        return Arrays.asList("setapikey", "astrokey");
     }
 
     @Override
