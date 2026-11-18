@@ -96,9 +96,9 @@ public final class ConfigManager {
                 }
             }
 
-            System.out.println("[AstroClient] Config loaded.");
+            System.out.println("[FIRED Client] Config loaded.");
         } catch (Exception e) {
-            System.err.println("[AstroClient] Failed to load config: " + e.getMessage());
+            System.err.println("[FIRED Client] Failed to load config: " + e.getMessage());
         } finally {
             loading = false;
         }
@@ -144,7 +144,7 @@ public final class ConfigManager {
         try (Writer writer = new FileWriter(configFile)) {
             GSON.toJson(root, writer);
         } catch (IOException e) {
-            System.err.println("[AstroClient] Failed to save config: " + e.getMessage());
+            System.err.println("[FIRED Client] Failed to save config: " + e.getMessage());
         }
     }
 
