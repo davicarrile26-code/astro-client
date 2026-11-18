@@ -1,0 +1,28 @@
+name: Build FIRED Client
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: Build FIRED Client
+        run: ./gradlew --no-daemon clean build
+      - name: Upload FIRED Client JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: FIRED-Client-1.8.9
+          path: build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 14
