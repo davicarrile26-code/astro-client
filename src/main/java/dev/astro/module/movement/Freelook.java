@@ -5,6 +5,7 @@ import dev.astro.event.events.TickEvent;
 import dev.astro.module.Category;
 import dev.astro.module.Module;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraft.client.entity.EntityPlayerSP;
 import org.lwjgl.input.Keyboard;
 
@@ -77,6 +78,13 @@ public final class Freelook extends Module {
             player.rotationPitch = cameraPitch;
             active = false;
         }
+    }
+
+    /** Apply the independent camera angles during Forge's camera setup. */
+    public void applyCamera(EntityViewRenderEvent.CameraSetup event) {
+        if (!active) return;
+        event.setYaw(cameraYaw + 180.0F);
+        event.setPitch(cameraPitch);
     }
 
     @Override
