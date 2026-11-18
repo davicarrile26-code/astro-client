@@ -41,7 +41,7 @@ public class ApiKeyCommand extends CommandBase {
             if (AstroClient.INSTANCE.getHypixelAPI().hasKey()) {
                 String key = AstroClient.INSTANCE.getHypixelAPI().getApiKey();
                 sender.addChatMessage(new ChatComponentText(
-                        EnumChatFormatting.AQUA + "[AstroClient] " + EnumChatFormatting.WHITE +
+                        EnumChatFormatting.AQUA + "[FIRED Client] " + EnumChatFormatting.WHITE +
                         "API key is set (" + key.substring(0, 8) + "...). Use " +
                         EnumChatFormatting.YELLOW + "/astrokey <key>" + EnumChatFormatting.WHITE +
                         " to change it."));
