@@ -5,6 +5,8 @@ import dev.astro.event.events.KeyEvent;
 import dev.astro.event.events.MouseClickEvent;
 import dev.astro.event.events.Render2DEvent;
 import dev.astro.event.events.TickEvent;
+import dev.astro.module.movement.Freelook;
+import dev.astro.module.render.Zoom;
 import dev.astro.ui.ClickGUI;
 import dev.astro.ui.CustomMainMenu;
 import dev.astro.ui.HUDEditor;
@@ -13,6 +15,8 @@ import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
+import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
@@ -30,6 +34,20 @@ public final class ForgeEventBridge {
     public void onTick(ClientTickEvent event) {
         if (event.phase != Phase.END) return;
         AstroClient.INSTANCE.getEventBus().post(new TickEvent());
+    }
+
+    @SubscribeEvent
+    public void onCameraSetup(EntityViewRenderEvent.CameraSetup event) {
+        if (AstroClient.INSTANCE == null || AstroClient.INSTANCE.getModuleManager() == null) return;
+        Freelook freelook = AstroClient.INSTANCE.getModuleManager().getByClass(Freelook.class);
+        if (freelook != null && freelook.isEnabled()) freelook.applyCamera(event);
+    }
+
+    @SubscribeEvent
+    public void onFovUpdate(FOVUpdateEvent event) {
+        if (AstroClient.INSTANCE == null || AstroClient.INSTANCE.getModuleManager() == null) return;
+        Zoom zoom = AstroClient.INSTANCE.getModuleManager().getByClass(Zoom.class);
+        if (zoom != null && zoom.isEnabled()) zoom.applyFov(event);
     }
 
     @SubscribeEvent
