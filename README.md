@@ -10,7 +10,7 @@ FIRED Client is a Forge 1.8.9 client mod for Minecraft focused on Bedwars HUDs, 
 - Java `8`
 - Forge Gradle build
 
-The mod stores its config in `.minecraft/astroclient/config.json` and supports draggable HUD overlays through the built-in HUD editor.
+The mod stores its config in `.minecraft/firedclient/config.json` (existing AstroClient configs are migrated automatically). and supports draggable HUD overlays through the built-in HUD editor.
 
 ## Features
 
@@ -31,7 +31,7 @@ The mod stores its config in `.minecraft/astroclient/config.json` and supports d
 
 ## Commands
 
-- `/astrokey <key>` or `/setapikey` sets the Hypixel API key used by `Level Head`
+- `/firedkey <key>` or `/setapikey` sets the Hypixel API key used by `Level Head`
 
 ## Build
 
@@ -43,8 +43,8 @@ The compiled jar is written to `build/libs/`.
 
 ## Config
 
-- Main config: `.minecraft/astroclient/config.json`
-- API key file: `.minecraft/astroclient/apikey.txt`
+- Main config: `.minecraft/firedclient/config.json`
+- API key file: `.minecraft/firedclient/apikey.txt`
 - Forge splash config: `.minecraft/config/splash.properties`
 
 ## Notes
@@ -52,4 +52,4 @@ The compiled jar is written to `build/libs/`.
 - `Zoom` and `Freelook` are hold-style modules.
 - `HUDModule` provides draggable, scalable on-screen elements.
 - `ConfigManager` persists enabled state, keybinds, visibility, HUD positions, typed settings, and a few legacy custom fields.
-- Astro user markers are automatic only: detected Astro clients get a marker in nametags and the tab list.
+- FIRED user markers are automatic only: detected FIRED clients get an F marker in nametags and the tab list. The legacy detection channel is retained for compatibility.
