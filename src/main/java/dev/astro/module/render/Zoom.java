@@ -36,7 +36,7 @@ public final class Zoom extends Module {
         super("Zoom",
               "Smoothly zooms in while key is held. Scroll to adjust.",
               Category.RENDER,
-              Keyboard.KEY_C);
+              Keyboard.KEY_Q);
     }
 
     @Override
