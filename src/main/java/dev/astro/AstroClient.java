@@ -13,11 +13,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.lwjgl.input.Keyboard;
 
-import java.io.File;
-import java.io.FileWriter;
 
 /**
  * FIRED Client — a Forge 1.8.9 client with a modular HUD and ClickGUI.
@@ -42,11 +39,6 @@ public class AstroClient {
 
     public static KeyBinding keyOpenGui;
     public static KeyBinding keyHudEditor;
-
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-        writeSplashProperties(event.getModConfigurationDirectory());
-    }
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
@@ -89,25 +81,4 @@ public class AstroClient {
     public AstroUsers getAstroUsers() { return astroUsers; }
     public HUD getHud() { return hud; }
 
-    private void writeSplashProperties(File configDir) {
-        File splash = new File(configDir, "splash.properties");
-        if (splash.exists()) return;
-
-        try {
-            if (!configDir.exists()) configDir.mkdirs();
-            try (FileWriter fw = new FileWriter(splash)) {
-                fw.write("# FIRED Client loading screen\n");
-                fw.write("background=0x080604\n");
-                fw.write("font=0xFFFFFF\n");
-                fw.write("barBackground=0x24110D\n");
-                fw.write("barBorder=0x7A2B12\n");
-                fw.write("barColor=0xFF4A00\n");
-                fw.write("logoOffset=0\n");
-                fw.write("rotate=true\n");
-            }
-            System.out.println("[" + NAME + "] Wrote splash.properties (takes effect next launch)");
-        } catch (Exception ignored) {
-            // Non-critical.
-        }
-    }
 }
