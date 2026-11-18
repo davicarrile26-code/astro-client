@@ -84,7 +84,7 @@ public final class NametagMod extends Module {
         // Build display string
         String name = player.getDisplayName().getFormattedText();
 
-        // AstroClient user icon
+        // FIRED launcher-style F marker
         if (AstroClient.INSTANCE.getAstroUsers() != null
                 && AstroClient.INSTANCE.getAstroUsers().isAstroUser(player.getUniqueID())) {
             name = AstroClient.INSTANCE.getAstroUsers().getMarkerPrefix() + name;
