@@ -12,6 +12,7 @@ import dev.astro.util.RenderUtil;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,337 +21,373 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * FIRED Click GUI — Badlion-inspired tiled module browser.
- * Uses only Minecraft 1.8.9 / LWJGL 2 rendering APIs.
+ * FIRED category-panel Click GUI.
+ * Independently implemented for FIRED on Minecraft Forge 1.8.9.
+ * The layout takes inspiration from multi-panel dropdown interfaces.
  */
 public final class ClickGUI extends GuiScreen {
-    private static final int HEADER_H = 58;
-    private static final int SIDEBAR_W = 205;
-    private static final int CARD_H = 205;
-    private static final int GAP = 9;
-    private static final int SETTING_ROW_H = 20;
-    private static final int TOGGLE_W = 27;
-    private static final int TOGGLE_H = 13;
-    private static final int SCROLLBAR_W = 3;
+    private static final int HEADER_H = 38;
+    private static final int GAP = 7;
+    private static final int PANEL_HEADER_H = 22;
+    private static final int MODULE_ROW_H = 19;
 
-    private static final int PANEL_BG = 0x70121217;
-    private static final int HEADER_BG = 0x8A0D0D11;
-    private static final int SIDEBAR_BG = 0x700F0F14;
-    private static final int CARD_BG = 0x50303034;
-    private static final int CARD_HOVER = 0x8040444C;
+    private static final int BG = 0xB80D0D12;
+    private static final int HEADER_BG = 0xE6111118;
+    private static final int PANEL_BG = 0xC91A1A22;
+    private static final int PANEL_HEAD = 0xE522222B;
+    private static final int ROW_BG = 0xA522222A;
+    private static final int ROW_HOVER = 0xD832323D;
     private static final int ACCENT = 0xFFFF4A16;
-    private static final int ACCENT_2 = 0xFFFF8528;
-    private static final int TEXT = 0xFFF0F0F2;
-    private static final int MUTED = 0xFF9999A2;
-    private static final int OFF = 0xFF45454C;
-    private static final int LINE = 0x24FFFFFF;
-    private static final int[] COLORS = {0xFFFFFFFF, 0xFFFF4A16, 0xFFFF8528,
-            0xFFFF3030, 0xFF00D084, 0xFF45A5FF, 0xFFFFD43B};
+    private static final int ACCENT_LIGHT = 0xFFFF8A32;
+    private static final int TEXT = 0xFFF4F4F6;
+    private static final int MUTED = 0xFF9B9BA5;
+    private static final int OFF = 0xFF555560;
+    private static final int[] COLORS = {
+            0xFFFFFFFF, 0xFFFF4A16, 0xFFFF8528, 0xFFFF3030,
+            0xFF00D084, 0xFF45A5FF, 0xFFFFD43B
+    };
 
-    private Category selectedCategory;
+    private final Map<Category, Integer> categoryScroll = new HashMap<Category, Integer>();
+    private Category selectedScrollCategory;
     private String searchQuery = "";
-    private boolean searchFocused = true;
+    private boolean searchFocused;
     private Module settingsModule;
     private NumberSetting draggingSlider;
-    private final Map<String, Integer> scrollOffsets = new HashMap<String, Integer>();
-    private final Map<Module, Float> toggleAnim = new HashMap<Module, Float>();
 
     private int[] bounds() {
         ScaledResolution sr = new ScaledResolution(mc);
-        int w = Math.min(Math.max(300, (int)(sr.getScaledWidth() * .96f)), sr.getScaledWidth() - 16);
-        int h = Math.min(Math.max(230, (int)(sr.getScaledHeight() * .94f)), sr.getScaledHeight() - 16);
-        w = Math.max(1, w);
-        h = Math.max(1, h);
-        return new int[]{(sr.getScaledWidth()-w)/2, (sr.getScaledHeight()-h)/2, w, h};
+        int sw = sr.getScaledWidth();
+        int sh = sr.getScaledHeight();
+        int w = Math.max(300, Math.min(sw - 16, (int)(sw * 0.94f)));
+        int h = Math.max(220, Math.min(sh - 16, (int)(sh * 0.90f)));
+        return new int[] {(sw - w) / 2, (sh - h) / 2, w, h};
     }
 
-    private String scrollKey() {
-        return searchQuery.length() > 0 ? "__search__" :
-                selectedCategory == null ? "__all__" : selectedCategory.name();
-    }
-
-    private List<Module> filteredModules() {
-        List<Module> source = selectedCategory == null || searchQuery.length() > 0
-                ? AstroClient.INSTANCE.getModuleManager().getModules()
-                : AstroClient.INSTANCE.getModuleManager().getByCategory(selectedCategory);
-        if (searchQuery.length() == 0) return source;
+    private List<Module> modules(Category category) {
+        List<Module> source = AstroClient.INSTANCE.getModuleManager().getByCategory(category);
+        if (searchQuery.isEmpty()) return source;
         List<Module> result = new ArrayList<Module>();
-        String q = searchQuery.toLowerCase();
-        for (Module m : source) {
-            if (m.getName().toLowerCase().contains(q) ||
-                    m.getDescription().toLowerCase().contains(q)) result.add(m);
+        String query = searchQuery.toLowerCase();
+        for (Module module : source) {
+            if (module.getName().toLowerCase().contains(query)
+                    || module.getDescription().toLowerCase().contains(query)) {
+                result.add(module);
+            }
         }
         return result;
     }
 
+    private int panelWidth(int width) {
+        return (width - GAP * 4) / 3;
+    }
+
+    private int panelHeight(int height) {
+        return (height - HEADER_H - GAP * 3) / 2;
+    }
+
+    private int[] panelBounds(int index, int x, int y, int width, int height) {
+        int col = index % 3;
+        int row = index / 3;
+        int pw = panelWidth(width);
+        int ph = panelHeight(height);
+        return new int[] {
+                x + GAP + col * (pw + GAP),
+                y + HEADER_H + GAP + row * (ph + GAP),
+                pw,
+                ph
+        };
+    }
+
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        // Keep the live game scene visible behind the translucent interface.
         int[] b = bounds();
-        drawPanel(mc.fontRendererObj, b[0], b[1], b[2], b[3], mouseX, mouseY);
+        int x = b[0], y = b[1], w = b[2], h = b[3];
+        RenderUtil.drawRoundedRect(x - 3, y - 3, x + w + 3, y + h + 3, 7, 0x50000000);
+        RenderUtil.drawRoundedRect(x, y, x + w, y + h, 5, BG);
+        drawHeader(mc.fontRendererObj, x, y, w, mouseX, mouseY);
+
+        Category[] categories = Category.values();
+        for (int i = 0; i < categories.length; i++) {
+            int[] p = panelBounds(i, x, y, w, h);
+            drawCategoryPanel(mc.fontRendererObj, categories[i], p[0], p[1], p[2], p[3], mouseX, mouseY);
+        }
+        if (settingsModule != null) drawSettings(mc.fontRendererObj, x, y, w, h, mouseX, mouseY);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
-    private void drawPanel(FontRenderer fr, int x, int y, int w, int h, int mx, int my) {
-        int right=x+w, bottom=y+h;
-        RenderUtil.drawRoundedRect(x-3,y-3,right+3,bottom+3,8,0x50000000);
-        RenderUtil.drawRoundedRect(x,y,right,bottom,5,PANEL_BG);
-        RenderUtil.drawRect(x,y,right,y+HEADER_H,HEADER_BG);
-        RenderUtil.drawRect(x,y+HEADER_H-1,right,y+HEADER_H,LINE);
+    private void drawHeader(FontRenderer fr, int x, int y, int w, int mx, int my) {
+        RenderUtil.drawRoundedRect(x, y, x + w, y + HEADER_H, 5, HEADER_BG);
+        RenderUtil.drawRect(x, y + HEADER_H - 1, x + w, y + HEADER_H, 0x55FFFFFF);
 
-        // Badlion reference structure: brand at the top, tabs across the header,
-        // filter rail on the left and equal-sized module tiles in a 3-column grid.
-        // Original FIRED flame mark (no third-party client branding).
-        RenderUtil.drawRoundedRect(x+8,y+9,x+34,y+35,6,ACCENT);
-        RenderUtil.drawRoundedRect(x+17,y+14,x+25,y+29,4,0xFFFFB044);
-        RenderUtil.drawRoundedRect(x+20,y+18,x+25,y+29,3,0xFFFFE0A0);
-        fr.drawStringWithShadow("FIRED",x+42,y+11,TEXT);
-        fr.drawStringWithShadow("CLIENT  /  MODS",x+42,y+24,MUTED);
+        RenderUtil.drawRoundedRect(x + 9, y + 7, x + 31, y + 29, 5, ACCENT);
+        RenderUtil.drawRoundedRect(x + 17, y + 10, x + 24, y + 25, 3, 0xFFFFB044);
+        RenderUtil.drawRoundedRect(x + 20, y + 15, x + 24, y + 25, 2, 0xFFFFE4A8);
+        fr.drawStringWithShadow("FIRED", x + 38, y + 8, TEXT);
+        fr.drawStringWithShadow("CLICK GUI", x + 38, y + 21, MUTED);
 
-        int tabY=y+9;
-        fr.drawStringWithShadow("Available Mods",x+SIDEBAR_W+12,y+23,TEXT);
-        int searchW=Math.max(82,Math.min(190,w/3));
-        int searchX=right-searchW-12;
-        int addW=100, addX=searchX-addW-8;
-        RenderUtil.drawRoundedRect(addX,tabY,addX+addW,tabY+27,4,0x603A3A40);
-        RenderUtil.drawOutline(addX,tabY,addX+addW,tabY+27,0x66777777);
-        fr.drawStringWithShadow("Add Mods",addX+18,tabY+9,TEXT);
-        RenderUtil.drawRoundedRect(searchX,tabY,searchX+searchW,tabY+27,4,0x70202027);
-        fr.drawStringWithShadow("⌕",searchX+9,tabY+9,ACCENT_2);
-        String searchLabel=searchQuery.length()==0?"Search...":searchQuery;
-        fr.drawStringWithShadow(searchLabel,searchX+25,tabY+9,
-                searchQuery.length()==0?MUTED:TEXT);
-
-        RenderUtil.drawRect(x,y+HEADER_H,x+SIDEBAR_W,bottom,SIDEBAR_BG);
-        RenderUtil.drawRect(x+SIDEBAR_W,y+HEADER_H,x+SIDEBAR_W+1,bottom,LINE);
-        drawSidebar(fr,x,y,h,mx,my);
-
-        int contentX=x+SIDEBAR_W+12, contentY=y+HEADER_H+12;
-        int contentW=w-SIDEBAR_W-24, contentH=h-HEADER_H-22;
-        fr.drawStringWithShadow(selectedCategory==null?"All Mods":selectedCategory.getDisplayName(),
-                contentX,contentY,TEXT);
-        fr.drawStringWithShadow(String.valueOf(filteredModules().size())+" mods",
-                contentX,contentY+13,MUTED);
-
-        int gridY=contentY+31;
-        int cols=contentW>=700?4:(contentW>=480?3:(contentW>=300?2:1));
-        int cardW=(contentW-(cols-1)*GAP-6)/cols;
-        List<Module> mods=filteredModules();
-        int rows=(mods.size()+cols-1)/cols;
-        int totalH=rows*(CARD_H+GAP);
-        int viewportH=Math.max(30,contentH-31);
-        int maxScroll=Math.max(0,totalH-viewportH);
-        int scroll=scrollOffsets.containsKey(scrollKey())?scrollOffsets.get(scrollKey()):0;
-        scroll=Math.max(0,Math.min(scroll,maxScroll));
-        scrollOffsets.put(scrollKey(),scroll);
-
-        for(int i=0;i<mods.size();i++){
-            int col=i%cols, row=i/cols;
-            int rx=contentX+col*(cardW+GAP);
-            int ry=gridY+row*(CARD_H+GAP)-scroll;
-            if(ry+CARD_H<gridY||ry>bottom-6)continue;
-            Module m=mods.get(i);
-            boolean hover=mx>=rx&&mx<rx+cardW&&my>=Math.max(gridY,ry)&&my<Math.min(bottom-6,ry+CARD_H);
-            RenderUtil.drawRoundedRect(rx,ry,rx+cardW,ry+CARD_H,3,hover?CARD_HOVER:CARD_BG);
-            RenderUtil.drawOutline(rx,ry,rx+cardW,ry+CARD_H,0x35FFFFFF);
-            String name=m.getName();
-            int nameWidth=fr.getStringWidth(name);
-            fr.drawStringWithShadow(name,rx+(cardW-nameWidth)/2,ry+13,TEXT);
-            String glyph=moduleGlyph(name);
-            int glyphWidth=fr.getStringWidth(glyph);
-            fr.drawString(glyph,rx+(cardW-glyphWidth)/2,ry+78,0xFFFFFFFF);
-            fr.drawStringWithShadow("★",rx+cardW-23,ry+CARD_H-29,0xFFFFFFFF);
-            int toggleW=48;
-            drawToggle(rx+(cardW-toggleW)/2,ry+CARD_H-31,toggleW,22,m.isEnabled()?1f:0f);
+        int searchW = Math.min(190, Math.max(105, w / 4));
+        int sx = x + w - searchW - 10;
+        int sy = y + 7;
+        RenderUtil.drawRoundedRect(sx, sy, sx + searchW, sy + 24, 4,
+                searchFocused ? 0xD52A2020 : 0xA51E1E26);
+        RenderUtil.drawOutline(sx, sy, sx + searchW, sy + 24,
+                searchFocused ? 0xCCFF6A2A : 0x44666666);
+        fr.drawStringWithShadow("Search", sx + 8, sy + 8, MUTED);
+        if (!searchQuery.isEmpty()) {
+            RenderUtil.drawRect(sx + 43, sy + 5, sx + 44, sy + 19, ACCENT);
+            fr.drawStringWithShadow(searchQuery, sx + 49, sy + 8, TEXT);
         }
-        if(maxScroll>0){
-            int trackX=right-5,trackY=gridY,trackH=viewportH;
-            int thumbH=Math.max(18,trackH*trackH/Math.max(trackH,totalH));
-            int thumbY=trackY+(int)((float)scroll/maxScroll*(trackH-thumbH));
-            RenderUtil.drawRoundedRect(trackX,trackY,trackX+3,trackY+trackH,2,0x30FFFFFF);
-            RenderUtil.drawRoundedRect(trackX,thumbY,trackX+3,thumbY+thumbH,2,ACCENT);
-        }
-        if(settingsModule!=null)drawSettingsPopup(fr,x,y,w,h,mx,my);
+        fr.drawStringWithShadow("39-module FIRED setup", x + 155, y + 14, MUTED);
     }
 
-    private void drawSidebar(FontRenderer fr,int x,int y,int h,int mx,int my){
-        int sx=x+8, sy=y+HEADER_H+15;
-        fr.drawStringWithShadow("FILTERS",sx+6,sy,MUTED);
-        sy+=19;
-        drawSideItem(fr,"All",null,sx,sy,mx,my); sy+=27;
-        for(Category category:Category.values()){
-            drawSideItem(fr,category.getDisplayName(),category,sx,sy,mx,my);
-            sy+=27;
-        }
-    }
+    private void drawCategoryPanel(FontRenderer fr, Category category, int x, int y,
+                                   int w, int h, int mx, int my) {
+        RenderUtil.drawRoundedRect(x, y, x + w, y + h, 4, PANEL_BG);
+        RenderUtil.drawRoundedRect(x, y, x + w, y + PANEL_HEADER_H, 4, PANEL_HEAD);
+        RenderUtil.drawRect(x, y + PANEL_HEADER_H - 1, x + w, y + PANEL_HEADER_H, 0x35FFFFFF);
 
-    private void drawSideItem(FontRenderer fr,String label,Category category,int x,int y,int mx,int my){
-        boolean active=selectedCategory==category;
-        boolean hover=mx>=x && mx<x+SIDEBAR_W-16 && my>=y-5 && my<y+17;
-        if(active)RenderUtil.drawRoundedRect(x,y-5,x+SIDEBAR_W-16,y+17,3,0xFF343E4C);
-        else if(hover)RenderUtil.drawRoundedRect(x,y-5,x+SIDEBAR_W-16,y+17,3,0xFF202630);
-        if(active)RenderUtil.drawRect(x,y-4,x+2,y+16,ACCENT);
-        fr.drawStringWithShadow(label,x+9,y+2,active?ACCENT_2:TEXT);
-    }
+        List<Module> list = modules(category);
+        fr.drawStringWithShadow(category.getDisplayName().toUpperCase(), x + 8, y + 7, ACCENT_LIGHT);
+        fr.drawStringWithShadow(String.valueOf(list.size()), x + w - 17, y + 7, MUTED);
 
-    private String moduleGlyph(String name){
-        String n=name.toLowerCase();
-        if(n.contains("armor"))return "♜";
-        if(n.contains("crosshair"))return "⊕";
-        if(n.contains("fov"))return "⌖";
-        if(n.contains("block"))return "◇";
-        if(n.contains("cps"))return "●";
-        if(n.contains("chat"))return "▤";
-        if(n.contains("coord"))return "⌖";
-        if(n.contains("fps"))return "▥";
-        if(n.contains("effect")||n.contains("potion"))return "⚗";
-        if(n.contains("direction"))return "⌄";
-        if(n.contains("zoom"))return "◎";
-        if(n.contains("clock"))return "◷";
-        if(n.contains("ping"))return "⌁";
-        if(n.contains("keystroke"))return "⌨";
-        return "◇";
-    }
+        int viewTop = y + PANEL_HEADER_H + 3;
+        int viewBottom = y + h - 4;
+        int visibleRows = Math.max(1, (viewBottom - viewTop) / MODULE_ROW_H);
+        int maxScroll = Math.max(0, list.size() - visibleRows);
+        int scroll = categoryScroll.containsKey(category) ? categoryScroll.get(category) : 0;
+        scroll = Math.max(0, Math.min(scroll, maxScroll));
+        categoryScroll.put(category, scroll);
 
-    private void drawToggle(int x,int y,int w,int h,float value){
-        int track=lerp(OFF,ACCENT,value);
-        RenderUtil.drawRoundedRect(x,y,x+w,y+h,4,track);
-        int k=h-4;
-        float kx=x+2+(w-k-4)*value;
-        RenderUtil.drawRoundedRect(kx,y+2,kx+k,y+h-2,3,0xFFFFFFFF);
-    }
-
-    private void drawSettingsPopup(FontRenderer fr,int x,int y,int w,int h,int mx,int my){
-        int pw=Math.min(270,w-30), ph=Math.min(h-50,70+settingsModule.getSettings().size()*24);
-        int px=x+w-pw-14, py=y+(h-ph)/2;
-        RenderUtil.drawRoundedRect(px,py,px+pw,py+ph,5,0xFF17171D);
-        RenderUtil.drawOutline(px,py,px+pw,py+ph,0x80FF4A16);
-        fr.drawStringWithShadow(settingsModule.getName()+" - Configurações",px+12,py+11,TEXT);
-        fr.drawStringWithShadow("X",px+pw-18,py+11,ACCENT_2);
-        int ry=py+32;
-        for(Setting<?> s:settingsModule.getSettings()){
-            RenderUtil.drawRoundedRect(px+9,ry,px+pw-9,ry+20,2,0xFF222229);
-            fr.drawStringWithShadow(s.getName(),px+16,ry+6,MUTED);
-            if(s instanceof BooleanSetting){
-                drawToggle(px+pw-43,ry+5,24,11,((BooleanSetting)s).getValue()?1:0);
-            }else if(s instanceof NumberSetting){
-                NumberSetting n=(NumberSetting)s;
-                String v=n.getStep()>=1?String.valueOf(n.getIntValue()):String.format("%.1f",n.getValue());
-                fr.drawStringWithShadow(v,px+pw-48,ry+6,TEXT);
-            }else if(s instanceof ModeSetting){
-                fr.drawStringWithShadow(((ModeSetting)s).getValue(),px+pw-95,ry+6,ACCENT_2);
-            }else if(s instanceof ColorSetting){
-                int dx=px+pw-92;
-                for(int c:COLORS){RenderUtil.drawRect(dx,ry+5,dx+9,ry+14,c);dx+=11;}
+        for (int i = 0; i < visibleRows && i + scroll < list.size(); i++) {
+            Module module = list.get(i + scroll);
+            int ry = viewTop + i * MODULE_ROW_H;
+            boolean hover = mx >= x + 4 && mx < x + w - 4 && my >= ry && my < ry + MODULE_ROW_H - 1;
+            RenderUtil.drawRoundedRect(x + 4, ry, x + w - 4, ry + MODULE_ROW_H - 1,
+                    2, hover ? ROW_HOVER : ROW_BG);
+            fr.drawStringWithShadow(module.getName(), x + 9, ry + 6,
+                    module.isEnabled() ? ACCENT_LIGHT : TEXT);
+            if (module.hasSettings()) {
+                fr.drawStringWithShadow("⚙", x + w - 35, ry + 5, MUTED);
             }
-            ry+=24;
+            int tx = x + w - 22;
+            int ty = ry + 5;
+            RenderUtil.drawRoundedRect(tx, ty, tx + 14, ty + 9, 4,
+                    module.isEnabled() ? ACCENT : OFF);
+            RenderUtil.drawRoundedRect(module.isEnabled() ? tx + 7 : tx + 1,
+                    ty + 1, module.isEnabled() ? tx + 13 : tx + 7, ty + 8, 3, 0xFFFFFFFF);
+        }
+
+        if (maxScroll > 0) {
+            int trackX = x + w - 3;
+            int trackY = viewTop;
+            int trackH = viewBottom - viewTop;
+            int thumbH = Math.max(14, trackH * visibleRows / list.size());
+            int thumbY = trackY + (trackH - thumbH) * scroll / maxScroll;
+            RenderUtil.drawRoundedRect(trackX, trackY, trackX + 2, trackY + trackH, 1, 0x44FFFFFF);
+            RenderUtil.drawRoundedRect(trackX, thumbY, trackX + 2, thumbY + thumbH, 1, ACCENT);
+        }
+    }
+
+    private void drawSettings(FontRenderer fr, int x, int y, int w, int h, int mx, int my) {
+        int pw = Math.min(300, w - 24);
+        int ph = Math.min(h - 24, 54 + settingsModule.getSettings().size() * 25);
+        int px = x + (w - pw) / 2;
+        int py = y + (h - ph) / 2;
+        RenderUtil.drawRoundedRect(px - 3, py - 3, px + pw + 3, py + ph + 3, 6, 0x90000000);
+        RenderUtil.drawRoundedRect(px, py, px + pw, py + ph, 5, 0xF015151B);
+        RenderUtil.drawRoundedRect(px, py, px + pw, py + 28, 4, 0xF0262022);
+        fr.drawStringWithShadow(settingsModule.getName() + " SETTINGS", px + 10, py + 10, ACCENT_LIGHT);
+        fr.drawStringWithShadow("X", px + pw - 16, py + 10, TEXT);
+
+        int ry = py + 35;
+        for (Setting<?> setting : settingsModule.getSettings()) {
+            if (ry + 21 > py + ph - 4) break;
+            RenderUtil.drawRoundedRect(px + 7, ry, px + pw - 7, ry + 21, 2, 0xAA292931);
+            fr.drawStringWithShadow(setting.getName(), px + 13, ry + 7, TEXT);
+            if (setting instanceof BooleanSetting) {
+                boolean on = ((BooleanSetting) setting).getValue();
+                RenderUtil.drawRoundedRect(px + pw - 39, ry + 5, px + pw - 14, ry + 16, 4,
+                        on ? ACCENT : OFF);
+                RenderUtil.drawRoundedRect(on ? px + pw - 26 : px + pw - 37, ry + 6,
+                        on ? px + pw - 16 : px + pw - 27, ry + 15, 4, 0xFFFFFFFF);
+            } else if (setting instanceof NumberSetting) {
+                NumberSetting number = (NumberSetting) setting;
+                String value = number.getStep() >= 1
+                        ? String.valueOf(number.getIntValue())
+                        : String.format("%.1f", number.getValue());
+                fr.drawStringWithShadow(value, px + pw - 48, ry + 7, ACCENT_LIGHT);
+            } else if (setting instanceof ModeSetting) {
+                fr.drawStringWithShadow(((ModeSetting) setting).getValue(),
+                        px + pw - 100, ry + 7, ACCENT_LIGHT);
+            } else if (setting instanceof ColorSetting) {
+                int cx = px + pw - 88;
+                for (int color : COLORS) {
+                    RenderUtil.drawRect(cx, ry + 6, cx + 9, ry + 15, color);
+                    cx += 11;
+                }
+            }
+            ry += 25;
         }
     }
 
     @Override
-    protected void mouseClicked(int mx,int my,int button)throws IOException{
-        super.mouseClicked(mx,my,button);
-        int[] b=bounds(); int x=b[0],y=b[1],w=b[2],h=b[3],right=x+w;
-        if(button==0 && my>=y && my<y+HEADER_H){
-            int searchW=Math.max(82,Math.min(190,w/3));
-            int searchX=right-searchW-12;
-            searchFocused=mx>=searchX&&mx<=searchX+searchW;
+    protected void mouseClicked(int mx, int my, int button) throws IOException {
+        super.mouseClicked(mx, my, button);
+        int[] b = bounds();
+        int x = b[0], y = b[1], w = b[2], h = b[3];
+        int searchW = Math.min(190, Math.max(105, w / 4));
+        int sx = x + w - searchW - 10;
+
+        if (button == 0 && mx >= sx && mx <= sx + searchW && my >= y + 7 && my <= y + 31) {
+            searchFocused = true;
             return;
         }
-        if(settingsModule!=null){
-            int pw=Math.min(270,w-30),ph=Math.min(h-50,70+settingsModule.getSettings().size()*24);
-            int px=x+w-pw-14,py=y+(h-ph)/2;
-            if(button==0 && mx>=px+pw-26 && mx<=px+pw && my>=py && my<py+26){settingsModule=null;return;}
-            int ry=py+32;
-            for(Setting<?> s:settingsModule.getSettings()){
-                if(my>=ry && my<ry+20 && mx>=px+9 && mx<px+pw-9){
-                    if(s instanceof BooleanSetting && button==0)((BooleanSetting)s).toggle();
-                    else if(s instanceof ModeSetting){if(button==1)((ModeSetting)s).cycleBack();else ((ModeSetting)s).cycle();}
-                    else if(s instanceof ColorSetting && button==0){
-                        int dx=px+pw-92;
-                        for(int color:COLORS){if(mx>=dx&&mx<dx+9){((ColorSetting)s).setValue(color);break;}dx+=11;}
-                    }else if(s instanceof NumberSetting && button==0){draggingSlider=(NumberSetting)s;updateSlider(mx,px,pw);}
-                    saveConfig(); return;
+        if (button == 0 && searchFocused && (my < y || my > y + HEADER_H)) searchFocused = false;
+
+        if (settingsModule != null) {
+            int pw = Math.min(300, w - 24);
+            int ph = Math.min(h - 24, 54 + settingsModule.getSettings().size() * 25);
+            int px = x + (w - pw) / 2;
+            int py = y + (h - ph) / 2;
+            if (button == 0 && mx >= px + pw - 25 && mx <= px + pw
+                    && my >= py && my <= py + 28) {
+                settingsModule = null;
+                return;
+            }
+            int ry = py + 35;
+            for (Setting<?> setting : settingsModule.getSettings()) {
+                if (my >= ry && my < ry + 21 && mx >= px + 7 && mx <= px + pw - 7) {
+                    if (setting instanceof BooleanSetting && button == 0) {
+                        ((BooleanSetting) setting).toggle();
+                    } else if (setting instanceof ModeSetting) {
+                        if (button == 1) ((ModeSetting) setting).cycleBack();
+                        else ((ModeSetting) setting).cycle();
+                    } else if (setting instanceof ColorSetting && button == 0) {
+                        int cx = px + pw - 88;
+                        for (int color : COLORS) {
+                            if (mx >= cx && mx < cx + 9) {
+                                ((ColorSetting) setting).setValue(color);
+                                break;
+                            }
+                            cx += 11;
+                        }
+                    } else if (setting instanceof NumberSetting && button == 0) {
+                        draggingSlider = (NumberSetting) setting;
+                        updateSlider(mx, px, pw);
+                    }
+                    saveConfig();
+                    return;
                 }
-                ry+=24;
+                ry += 25;
             }
-            if(mx>=px&&mx<=px+pw&&my>=py&&my<=py+ph)return;
-            settingsModule=null;
+            if (mx >= px && mx <= px + pw && my >= py && my <= py + ph) return;
+            settingsModule = null;
         }
-        if(button!=0&&button!=1)return;
-        int sx=x+8,sy=y+HEADER_H+34;
-        if(mx>=sx&&mx<sx+SIDEBAR_W-16){
-            if(my>=sy-5&&my<sy+17){selectedCategory=null;return;}
-            sy+=27;
-            for(Category category:Category.values()){
-                if(my>=sy-5&&my<sy+17){selectedCategory=category;return;}
-                sy+=27;
+
+        if (button != 0 && button != 1) return;
+        Category[] categories = Category.values();
+        for (int i = 0; i < categories.length; i++) {
+            Category category = categories[i];
+            int[] p = panelBounds(i, x, y, w, h);
+            int px = p[0], py = p[1], pw = p[2], panelH = p[3];
+            int viewTop = py + PANEL_HEADER_H + 3;
+            int viewBottom = py + panelH - 4;
+            if (mx < px || mx > px + pw || my < py || my > py + panelH) continue;
+            if (my < viewTop) return;
+
+            List<Module> list = modules(category);
+            int visibleRows = Math.max(1, (viewBottom - viewTop) / MODULE_ROW_H);
+            int scroll = categoryScroll.containsKey(category) ? categoryScroll.get(category) : 0;
+            for (int row = 0; row < visibleRows && row + scroll < list.size(); row++) {
+                int ry = viewTop + row * MODULE_ROW_H;
+                if (my < ry || my >= ry + MODULE_ROW_H) continue;
+                Module module = list.get(row + scroll);
+                if (button == 1 && module.hasSettings()) {
+                    settingsModule = module;
+                    return;
+                }
+                if (button == 0) {
+                    if (mx >= px + pw - 43 && module.hasSettings()) settingsModule = module;
+                    else module.toggle();
+                    saveConfig();
+                    return;
+                }
             }
         }
-        int contentX=x+SIDEBAR_W+12,contentY=y+HEADER_H+12;
-        int contentW=w-SIDEBAR_W-24,contentH=h-HEADER_H-22;
-        int cols=contentW>=760?4:(contentW>=520?3:(contentW>=340?2:1));
-        int cardW=(contentW-(cols-1)*GAP-6)/cols;
-        int gridY=contentY+31;
-        List<Module> mods=filteredModules();
-        int rows=(mods.size()+cols-1)/cols,totalH=rows*(CARD_H+GAP);
-        int maxScroll=Math.max(0,totalH-Math.max(30,contentH-31));
-        int scroll=scrollOffsets.containsKey(scrollKey())?scrollOffsets.get(scrollKey()):0;
-        scroll=Math.max(0,Math.min(scroll,maxScroll));
-        for(int i=0;i<mods.size();i++){
-            int col=i%cols,row=i/cols,cx=contentX+col*(cardW+GAP),cy=gridY+row*(CARD_H+GAP)-scroll;
-            if(mx<cx||mx>=cx+cardW||my<cy||my>=cy+CARD_H)continue;
-            Module module=mods.get(i);
-            if(module.hasSettings()&&mx>=cx+cardW-30&&mx<=cx+cardW-5&&my>=cy+5&&my<=cy+31){settingsModule=module;return;}
-            module.toggle();saveConfig();return;
+    }
+
+    private void updateSlider(int mouseX, int px, int pw) {
+        if (draggingSlider == null) return;
+        float pct = (float)(mouseX - (px + 110)) / (float)Math.max(1, pw - 130);
+        draggingSlider.setPercent(Math.max(0f, Math.min(1f, pct)));
+    }
+
+    @Override
+    protected void mouseClickMove(int mx, int my, int button, long elapsed) {
+        if (draggingSlider != null && button == 0) {
+            int[] b = bounds();
+            int pw = Math.min(300, b[2] - 24);
+            int px = b[0] + (b[2] - pw) / 2;
+            updateSlider(mx, px, pw);
         }
-    }
-
-    private void updateSlider(int mouseX,int px,int pw){
-        if(draggingSlider==null)return;
-        float pct=(float)(mouseX-(px+66))/(float)Math.max(1,pw-120);
-        draggingSlider.setPercent(Math.max(0f,Math.min(1f,pct)));
+        super.mouseClickMove(mx, my, button, elapsed);
     }
 
     @Override
-    protected void mouseClickMove(int mx,int my,int button,long elapsed){
-        if(draggingSlider!=null&&button==0){int[] b=bounds();int pw=Math.min(270,b[2]-30);updateSlider(mx,b[0]+b[2]-pw-14,pw);}
-        super.mouseClickMove(mx,my,button,elapsed);
+    protected void mouseReleased(int mx, int my, int state) {
+        if (draggingSlider != null) {
+            draggingSlider = null;
+            saveConfig();
+        }
+        super.mouseReleased(mx, my, state);
     }
 
     @Override
-    protected void mouseReleased(int mx,int my,int state){
-        if(draggingSlider!=null){draggingSlider=null;saveConfig();}
-        super.mouseReleased(mx,my,state);
-    }
-
-    @Override
-    public void handleMouseInput()throws IOException{
+    public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int wheel=org.lwjgl.input.Mouse.getEventDWheel();
-        if(wheel!=0){String key=scrollKey();int value=scrollOffsets.containsKey(key)?scrollOffsets.get(key):0;
-            value-=(wheel>0?1:-1)*(CARD_H+GAP)*2;scrollOffsets.put(key,Math.max(0,value));}
+        int wheel = Mouse.getEventDWheel();
+        if (wheel == 0) return;
+        int mx = Mouse.getX() * width / mc.displayWidth;
+        int my = height - Mouse.getY() * height / mc.displayHeight - 1;
+        int[] b = bounds();
+        Category[] categories = Category.values();
+        for (int i = 0; i < categories.length; i++) {
+            int[] p = panelBounds(i, b[0], b[1], b[2], b[3]);
+            if (mx >= p[0] && mx <= p[0] + p[2] && my >= p[1] && my <= p[1] + p[3]) {
+                Category category = categories[i];
+                int current = categoryScroll.containsKey(category) ? categoryScroll.get(category) : 0;
+                int max = Math.max(0, modules(category).size()
+                        - Math.max(1, (p[3] - PANEL_HEADER_H - 7) / MODULE_ROW_H));
+                categoryScroll.put(category, Math.max(0, Math.min(max, current + (wheel > 0 ? -2 : 2))));
+                break;
+            }
+        }
     }
 
     @Override
-    protected void keyTyped(char c,int key)throws IOException{
-        if(key==1){if(settingsModule!=null)settingsModule=null;else if(searchQuery.length()>0)searchQuery="";else mc.displayGuiScreen(null);return;}
-        if(!searchFocused)return;
-        if(key==14){if(searchQuery.length()>0)searchQuery=searchQuery.substring(0,searchQuery.length()-1);return;}
-        if(c>=' '&&c<127)searchQuery+=c;
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (keyCode == 1) {
+            if (settingsModule != null) settingsModule = null;
+            else if (!searchQuery.isEmpty()) searchQuery = "";
+            else mc.displayGuiScreen(null);
+            return;
+        }
+        if (!searchFocused) return;
+        if (keyCode == 14) {
+            if (!searchQuery.isEmpty()) searchQuery = searchQuery.substring(0, searchQuery.length() - 1);
+            return;
+        }
+        if (typedChar >= 32 && typedChar < 127) searchQuery += typedChar;
     }
 
-    private void saveConfig(){
-        if(AstroClient.INSTANCE.getConfigManager()!=null)AstroClient.INSTANCE.getConfigManager().save();
+    private void saveConfig() {
+        if (AstroClient.INSTANCE.getConfigManager() != null) {
+            AstroClient.INSTANCE.getConfigManager().save();
+        }
     }
 
-    @Override public boolean doesGuiPauseGame(){return false;}
-
-    private static int lerp(int a,int b,float t){
-        int aa=(int)(((a>>>24)&255)+(((b>>>24)&255)-((a>>>24)&255))*t);
-        int r=(int)(((a>>>16)&255)+(((b>>>16)&255)-((a>>>16)&255))*t);
-        int g=(int)(((a>>>8)&255)+(((b>>>8)&255)-((a>>>8)&255))*t);
-        int bl=(int)((a&255)+((b&255)-(a&255))*t);
-        return (aa<<24)|(r<<16)|(g<<8)|bl;
+    @Override
+    public boolean doesGuiPauseGame() {
+        return false;
     }
 }
