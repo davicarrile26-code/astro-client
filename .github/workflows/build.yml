@@ -1,7 +1,7 @@
 name: Build FIRED Client
 on:
   push:
-    branches: [main]
+    branches: [main, fired-lunar-menu-badlion-gui]
   workflow_dispatch:
 
 jobs:
