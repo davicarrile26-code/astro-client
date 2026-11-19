@@ -21,15 +21,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * FIRED category-panel Click GUI.
- * Independently implemented for FIRED on Minecraft Forge 1.8.9.
- * The layout takes inspiration from multi-panel dropdown interfaces.
+ * FIRED dropdown Click GUI, adapted for the FIRED module system.
  */
 public final class ClickGUI extends GuiScreen {
-    private static final int HEADER_H = 38;
+    private static final int HEADER_H = 25;
     private static final int GAP = 7;
-    private static final int PANEL_HEADER_H = 22;
-    private static final int MODULE_ROW_H = 19;
+    private static final int PANEL_HEADER_H = 16;
+    private static final int MODULE_ROW_H = 15;
 
     private static final int BG = 0xB80D0D12;
     private static final int HEADER_BG = 0xE6111118;
@@ -77,25 +75,15 @@ public final class ClickGUI extends GuiScreen {
         return result;
     }
 
-    private int panelWidth(int width) {
-        return (width - GAP * 4) / 3;
-    }
+    private int panelWidth(int width) { return Math.min(120, Math.max(92, (width - GAP * 7) / 6)); }
 
-    private int panelHeight(int height) {
-        return (height - HEADER_H - GAP * 3) / 2;
-    }
+    private int panelHeight(int height) { return height - HEADER_H - GAP * 2; }
 
     private int[] panelBounds(int index, int x, int y, int width, int height) {
-        int col = index % 3;
-        int row = index / 3;
         int pw = panelWidth(width);
-        int ph = panelHeight(height);
-        return new int[] {
-                x + GAP + col * (pw + GAP),
-                y + HEADER_H + GAP + row * (ph + GAP),
-                pw,
-                ph
-        };
+        int total = Category.values().length * pw + (Category.values().length - 1) * GAP;
+        int startX = x + (width - total) / 2;
+        return new int[] { startX + index * (pw + GAP), y + HEADER_H + GAP, pw, panelHeight(height) };
     }
 
     @Override
@@ -137,7 +125,7 @@ public final class ClickGUI extends GuiScreen {
             RenderUtil.drawRect(sx + 43, sy + 5, sx + 44, sy + 19, ACCENT);
             fr.drawStringWithShadow(searchQuery, sx + 49, sy + 8, TEXT);
         }
-        fr.drawStringWithShadow("39-module FIRED setup", x + 155, y + 14, MUTED);
+        fr.drawStringWithShadow("FIRED CLIENT", x + 155, y + 10, MUTED);
     }
 
     private void drawCategoryPanel(FontRenderer fr, Category category, int x, int y,
@@ -147,11 +135,11 @@ public final class ClickGUI extends GuiScreen {
         RenderUtil.drawRect(x, y + PANEL_HEADER_H - 1, x + w, y + PANEL_HEADER_H, 0x35FFFFFF);
 
         List<Module> list = modules(category);
-        fr.drawStringWithShadow(category.getDisplayName().toUpperCase(), x + 8, y + 7, ACCENT_LIGHT);
-        fr.drawStringWithShadow(String.valueOf(list.size()), x + w - 17, y + 7, MUTED);
+        fr.drawStringWithShadow(category.getDisplayName().toUpperCase(), x + 5, y + 5, ACCENT_LIGHT);
+        fr.drawStringWithShadow(String.valueOf(list.size()), x + w - 15, y + 5, MUTED);
 
-        int viewTop = y + PANEL_HEADER_H + 3;
-        int viewBottom = y + h - 4;
+        int viewTop = y + PANEL_HEADER_H + 2;
+        int viewBottom = y + h - 3;
         int visibleRows = Math.max(1, (viewBottom - viewTop) / MODULE_ROW_H);
         int maxScroll = Math.max(0, list.size() - visibleRows);
         int scroll = categoryScroll.containsKey(category) ? categoryScroll.get(category) : 0;
@@ -162,16 +150,16 @@ public final class ClickGUI extends GuiScreen {
             Module module = list.get(i + scroll);
             int ry = viewTop + i * MODULE_ROW_H;
             boolean hover = mx >= x + 4 && mx < x + w - 4 && my >= ry && my < ry + MODULE_ROW_H - 1;
-            RenderUtil.drawRoundedRect(x + 4, ry, x + w - 4, ry + MODULE_ROW_H - 1,
-                    2, hover ? ROW_HOVER : ROW_BG);
-            fr.drawStringWithShadow(module.getName(), x + 9, ry + 6,
+            RenderUtil.drawRect(x + 2, ry, x + w - 2, ry + MODULE_ROW_H - 1,
+                    hover ? ROW_HOVER : ROW_BG);
+            fr.drawStringWithShadow(module.getName(), x + 5, ry + 4,
                     module.isEnabled() ? ACCENT_LIGHT : TEXT);
             if (module.hasSettings()) {
-                fr.drawStringWithShadow("⚙", x + w - 35, ry + 5, MUTED);
+                fr.drawStringWithShadow("+", x + w - 31, ry + 4, MUTED);
             }
             int tx = x + w - 22;
             int ty = ry + 5;
-            RenderUtil.drawRoundedRect(tx, ty, tx + 14, ty + 9, 4,
+            RenderUtil.drawRoundedRect(tx, ty, tx + 12, ty + 8, 4,
                     module.isEnabled() ? ACCENT : OFF);
             RenderUtil.drawRoundedRect(module.isEnabled() ? tx + 7 : tx + 1,
                     ty + 1, module.isEnabled() ? tx + 13 : tx + 7, ty + 8, 3, 0xFFFFFFFF);
@@ -290,8 +278,8 @@ public final class ClickGUI extends GuiScreen {
             Category category = categories[i];
             int[] p = panelBounds(i, x, y, w, h);
             int px = p[0], py = p[1], pw = p[2], panelH = p[3];
-            int viewTop = py + PANEL_HEADER_H + 3;
-            int viewBottom = py + panelH - 4;
+            int viewTop = py + PANEL_HEADER_H + 2;
+            int viewBottom = py + panelH - 3;
             if (mx < px || mx > px + pw || my < py || my > py + panelH) continue;
             if (my < viewTop) return;
 
@@ -307,7 +295,7 @@ public final class ClickGUI extends GuiScreen {
                     return;
                 }
                 if (button == 0) {
-                    if (mx >= px + pw - 43 && module.hasSettings()) settingsModule = module;
+                    if (mx >= px + pw - 38 && module.hasSettings()) settingsModule = module;
                     else module.toggle();
                     saveConfig();
                     return;
