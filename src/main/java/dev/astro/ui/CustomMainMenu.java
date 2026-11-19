@@ -153,22 +153,6 @@ public final class CustomMainMenu extends GuiMainMenu {
                 org.lwjgl.opengl.GL11.glEnd();
                 circle(cx,cy,7,org.lwjgl.opengl.GL11.GL_LINE_LOOP);
                 circle(cx,cy,2.5F,org.lwjgl.opengl.GL11.GL_LINE_LOOP);
-            } else if (id == LANGUAGE) {
-                // Globe with latitude and longitude lines.
-                circle(cx,cy,10,org.lwjgl.opengl.GL11.GL_LINE_LOOP);
-                org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINES);
-                org.lwjgl.opengl.GL11.glVertex2f(cx-9,cy);
-                org.lwjgl.opengl.GL11.glVertex2f(cx+9,cy);
-                org.lwjgl.opengl.GL11.glVertex2f(cx,cy-9);
-                org.lwjgl.opengl.GL11.glVertex2f(cx,cy+9);
-                org.lwjgl.opengl.GL11.glEnd();
-                org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINE_LOOP);
-                for(int i=0;i<32;i++){
-                    double a=Math.PI*2*i/32.0;
-                    org.lwjgl.opengl.GL11.glVertex2f(cx+(float)Math.cos(a)*4.5F,
-                            cy+(float)Math.sin(a)*9.0F);
-                }
-                org.lwjgl.opengl.GL11.glEnd();
             } else if (id == COSMETICS) {
                 // Shirt/clothing symbol used for the cosmetics shortcut, in the familiar client style.
                 org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINE_LOOP);
