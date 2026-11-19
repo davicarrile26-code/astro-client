@@ -110,6 +110,15 @@ public final class CustomMainMenu extends GuiMainMenu {
             RenderUtil.drawOutline(xPosition,yPosition,xPosition+width,yPosition+height,
                     hovered?0x90FF4A16:0x40777777);
             int color=hovered?0xFFFF6A32:0xFFF0F0F2;
+            if (id == SINGLE || id == MULTI) {
+                String label = displayString;
+                int textWidth = mc.fontRendererObj.getStringWidth(label);
+                mc.fontRendererObj.drawString(label,
+                        xPosition + (width - textWidth) / 2,
+                        yPosition + (height - 8) / 2,
+                        color, false);
+                return;
+            }
             drawShortcutIcon(mc, xPosition + width / 2, yPosition + height / 2, color);
         }
 
