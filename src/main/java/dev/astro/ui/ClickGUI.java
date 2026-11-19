@@ -151,33 +151,17 @@ public final class ClickGUI extends GuiScreen {
             if(ry+CARD_H<gridY||ry>bottom-6)continue;
             Module m=mods.get(i);
             boolean hover=mx>=rx&&mx<rx+cardW&&my>=Math.max(gridY,ry)&&my<Math.min(bottom-6,ry+CARD_H);
-            RenderUtil.drawRoundedRect(rx,ry,rx+cardW,ry+CARD_H,3,
-                    hover?0xFF303541:CARD_BG);
-            RenderUtil.drawOutline(rx,ry,rx+cardW,ry+CARD_H,
-                    m.isEnabled()?0xA0FF6428:0x305F4538);
+            RenderUtil.drawRoundedRect(rx,ry,rx+cardW,ry+CARD_H,3,hover?CARD_HOVER:CARD_BG);
+            RenderUtil.drawOutline(rx,ry,rx+cardW,ry+CARD_H,0x35FFFFFF);
             String name=m.getName();
-            // Compact module tile: FIRED icon, title, description and a clear state control.
-            RenderUtil.drawRoundedRect(rx+10,ry+10,rx+34,ry+34,5,
-                    m.isEnabled()?0xFF63301F:0xFF303039);
-            String glyph=name.length()>0?name.substring(0,1).toUpperCase():"?";
-            fr.drawStringWithShadow(glyph,rx+18,ry+18,m.isEnabled()?ACCENT_2:TEXT);
-            fr.drawStringWithShadow(name,rx+42,ry+12,TEXT);
-            String description=m.getDescription()==null?"":m.getDescription();
-            if(description.length()>0){
-                int maxChars=Math.max(12,(cardW-58)/4);
-                if(description.length()>maxChars)description=description.substring(0,maxChars-3)+"...";
-                fr.drawStringWithShadow(description,rx+42,ry+25,MUTED);
-            }
-            fr.drawStringWithShadow(m.isEnabled()?"ATIVADO":"DESATIVADO",
-                    rx+12,ry+CARD_H-19,m.isEnabled()?ACCENT_2:MUTED);
-            int toggleW=30,toggleX=rx+cardW-48;
-            drawToggle(toggleX,ry+CARD_H-22,toggleW,13,m.isEnabled()?1f:0f);
-            if(m.hasSettings()){
-                RenderUtil.drawRoundedRect(rx+cardW-25,ry+8,rx+cardW-7,ry+26,4,
-                        settingsModule==m?0xFF493027:0xFF34343D);
-                fr.drawStringWithShadow("⚙",rx+cardW-21,ry+12,
-                        settingsModule==m?ACCENT_2:MUTED);
-            }
+            int nameWidth=fr.getStringWidth(name);
+            fr.drawStringWithShadow(name,rx+(cardW-nameWidth)/2,ry+13,TEXT);
+            String glyph=moduleGlyph(name);
+            int glyphWidth=fr.getStringWidth(glyph);
+            fr.drawString(glyph,rx+(cardW-glyphWidth)/2,ry+78,0xFFFFFFFF);
+            fr.drawStringWithShadow("★",rx+cardW-23,ry+CARD_H-29,0xFFFFFFFF);
+            int toggleW=48;
+            drawToggle(rx+(cardW-toggleW)/2,ry+CARD_H-31,toggleW,22,m.isEnabled()?1f:0f);
         }
         if(maxScroll>0){
             int trackX=right-5,trackY=gridY,trackH=viewportH;
@@ -207,6 +191,25 @@ public final class ClickGUI extends GuiScreen {
         else if(hover)RenderUtil.drawRoundedRect(x,y-5,x+SIDEBAR_W-16,y+17,3,0xFF202630);
         if(active)RenderUtil.drawRect(x,y-4,x+2,y+16,ACCENT);
         fr.drawStringWithShadow(label,x+9,y+2,active?ACCENT_2:TEXT);
+    }
+
+    private String moduleGlyph(String name){
+        String n=name.toLowerCase();
+        if(n.contains("armor"))return "♜";
+        if(n.contains("crosshair"))return "⊕";
+        if(n.contains("fov"))return "⌖";
+        if(n.contains("block"))return "◇";
+        if(n.contains("cps"))return "●";
+        if(n.contains("chat"))return "▤";
+        if(n.contains("coord"))return "⌖";
+        if(n.contains("fps"))return "▥";
+        if(n.contains("effect")||n.contains("potion"))return "⚗";
+        if(n.contains("direction"))return "⌄";
+        if(n.contains("zoom"))return "◎";
+        if(n.contains("clock"))return "◷";
+        if(n.contains("ping"))return "⌁";
+        if(n.contains("keystroke"))return "⌨";
+        return "◇";
     }
 
     private void drawToggle(int x,int y,int w,int h,float value){
