@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import java.io.IOException;
 
 /** FIRED home screen: classic Minecraft/Lunar-style centered navigation. */
-public final class CustomMainMenu extends GuiScreen {
+public final class CustomMainMenu extends GuiMainMenu {
     private static final int ORANGE = 0xFFFF4A16;
     private static final int WHITE = 0xFFF4F4F6;
     private static final int MUTED = 0xFFB5B5BC;
@@ -18,6 +18,7 @@ public final class CustomMainMenu extends GuiScreen {
     private static final int SINGLE=1, MULTI=2, MODS=3, OPTIONS=4, QUIT=5;
 
     @Override public void initGui() {
+        super.initGui();
         buttonList.clear();
         int cx = width / 2;
         int y = height / 2 - 12;
@@ -31,9 +32,8 @@ public final class CustomMainMenu extends GuiScreen {
     }
 
     @Override public void drawScreen(int mx,int my,float partialTicks) {
-        drawDefaultBackground();
-        // Keep the Minecraft panorama/background visible; only add a light dimmer.
-        drawRect(0,0,width,height,0x38000000);
+        super.drawScreen(mx,my,partialTicks);
+        drawRect(0,0,width,height,0x18000000);
 
         String brand = "FIRED";
         GlStateManager.pushMatrix();
@@ -48,7 +48,6 @@ public final class CustomMainMenu extends GuiScreen {
         fontRendererObj.drawStringWithShadow(subtitle,
                 cx-fontRendererObj.getStringWidth(subtitle)/2,height/2-39,MUTED);
 
-        super.drawScreen(mx,my,partialTicks);
         String footer="FIRED Client  •  v"+AstroClient.VERSION;
         fontRendererObj.drawStringWithShadow(footer,6,height-12,0xFFAAAAAA);
     }
