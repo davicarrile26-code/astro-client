@@ -52,24 +52,36 @@ public final class RenderUtil {
         drawRect(x2 - 1, y1, x2, y2, colour);
     }
 
-    /**
-     * Rounded rectangle approximation — draws a filled rect then
-     * small corner quads with reduced alpha to fake rounding at
-     * 1.8's limited GL level.  Good enough for a clean look.
-     */
+    /** Smooth rounded rectangle rendered with segmented OpenGL arcs. */
     public static void drawRoundedRect(float x1, float y1, float x2, float y2,
                                        float radius, int colour) {
-        // Main body (inset by radius)
-        drawRect(x1 + radius, y1, x2 - radius, y2, colour);
-        // Top/bottom strips
-        drawRect(x1, y1 + radius, x1 + radius, y2 - radius, colour);
-        drawRect(x2 - radius, y1 + radius, x2, y2 - radius, colour);
-        // Corners as small filled rects (simple approximation)
-        int corner = blendAlpha(colour, 0.7f);
-        drawRect(x1, y1, x1 + radius, y1 + radius, corner);
-        drawRect(x2 - radius, y1, x2, y1 + radius, corner);
-        drawRect(x1, y2 - radius, x1 + radius, y2, corner);
-        drawRect(x2 - radius, y2 - radius, x2, y2, corner);
+        if (x2 <= x1 || y2 <= y1) return;
+        float r = Math.max(0f, Math.min(radius, Math.min(x2-x1, y2-y1)/2f));
+        if (r <= 0f) { drawRect(x1, y1, x2, y2, colour); return; }
+        float alpha=(colour >>> 24 & 255)/255f;
+        float red=(colour >>> 16 & 255)/255f;
+        float green=(colour >>> 8 & 255)/255f;
+        float blue=(colour & 255)/255f;
+        GlStateManager.enableBlend();
+        GlStateManager.disableTexture2D();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.color(red, green, blue, alpha);
+        GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+        GL11.glVertex2f((x1+x2)/2f, (y1+y2)/2f);
+        float[] cx={x2-r,x2-r,x1+r,x1+r};
+        float[] cy={y1+r,y2-r,y2-r,y1+r};
+        float[] start={-90f,0f,90f,180f};
+        for(int corner=0;corner<4;corner++) {
+            for(int i=0;i<=8;i++) {
+                double angle=Math.toRadians(start[corner]+i*90f/8f);
+                GL11.glVertex2f(cx[corner]+(float)Math.cos(angle)*r,
+                                cy[corner]+(float)Math.sin(angle)*r);
+            }
+        }
+        GL11.glEnd();
+        GlStateManager.enableTexture2D();
+        GlStateManager.disableBlend();
+        GlStateManager.color(1f,1f,1f,1f);
     }
 
     /** Horizontal gradient rect (left colour → right colour). */
