@@ -27,15 +27,15 @@ public final class CustomMainMenu extends GuiMainMenu {
         buttonList.clear();
 
         // The reference uses one centered vertical stack, not a button grid.
-        int primaryW = Math.min(360, Math.max(240, width - 40));
-        int primaryH = 34;
+        int primaryW = Math.min(444, Math.max(260, width - 40));
+        int primaryH = 38;
         int primaryX = (width - primaryW) / 2;
-        int primaryY = Math.max(190, height * 43 / 100);
+        int primaryY = Math.max(210, height * 41 / 100);
         buttonList.add(new FlatButton(SINGLE, primaryX, primaryY, primaryW, primaryH, "S I N G L E P L A Y E R"));
-        buttonList.add(new FlatButton(MULTI, primaryX, primaryY + 44, primaryW, primaryH, "M U L T I P L A Y E R"));
+        buttonList.add(new FlatButton(MULTI, primaryX, primaryY + 50, primaryW, primaryH, "M U L T I P L A Y E R"));
 
         // Four compact shortcut tiles along the bottom, following Lunar's menu rhythm.
-        int tile = 38, gap = 8;
+        int tile = 42, gap = 9;
         int utilityX = width / 2 - (tile * 2 + gap * 2) - (tile + gap) / 2;
         int utilityY = height - 58;
         buttonList.add(new FlatButton(OPTIONS, utilityX, utilityY, tile, tile, ""));
@@ -105,17 +105,7 @@ public final class CustomMainMenu extends GuiMainMenu {
             RenderUtil.drawOutline(xPosition,yPosition,xPosition+width,yPosition+height,
                     hovered?0x90FF4A16:0x40777777);
             int color=hovered?0xFFFF6A32:0xFFF0F0F2;
-            if (id == SINGLE || id == MULTI) {
-                // Primary Lunar-inspired navigation buttons use centered labels.
-                String label = id == SINGLE ? "SINGLEPLAYER" : "MULTIPLAYER";
-                int tw = mc.fontRendererObj.getStringWidth(label);
-                mc.fontRendererObj.drawStringWithShadow(label,
-                        xPosition + (width - tw) / 2,
-                        yPosition + (height - 8) / 2,
-                        color);
-            } else {
-                drawShortcutIcon(mc, xPosition + width / 2, yPosition + height / 2, color);
-            }
+            drawShortcutIcon(mc, xPosition + width / 2, yPosition + height / 2, color);
         }
 
         private void drawShortcutIcon(Minecraft mc, int cx, int cy, int color) {
