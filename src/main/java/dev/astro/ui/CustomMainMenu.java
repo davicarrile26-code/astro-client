@@ -9,9 +9,11 @@ import net.minecraft.client.renderer.GlStateManager;
 import java.io.IOException;
 
 /**
- * FIRED home screen matching the Lunar reference composition:
- * centered logo, two stacked primary buttons, bottom utility tiles,
- * and a large client tile in the lower-right corner.
+ * Forge 1.8.9 port of the Lunar main-menu composition.
+ *
+ * The original Lunar screen classes depend on Lunar's Lcui/Bridge runtime,
+ * which is not present in this Forge-only client. This screen recreates the
+ * same home-screen layout and native Minecraft actions without those APIs.
  */
 public final class CustomMainMenu extends GuiMainMenu {
     private static final int ORANGE = 0xFFFF4A16;
@@ -125,7 +127,7 @@ public final class CustomMainMenu extends GuiMainMenu {
         private void drawShortcutIcon(Minecraft mc, int cx, int cy, int color) {
             if (id == MODS) {
                 mc.getTextureManager().bindTexture(FIRED_ICON);
-                drawModalRectWithCustomSizedTexture(cx-12, cy-12, 0, 0, 24, 24, 256, 256);
+                Gui.drawModalRectWithCustomSizedTexture(cx-12, cy-12, 0, 0, 24, 24, 256, 256);
                 return;
             }
             org.lwjgl.opengl.GL11.glPushMatrix();
