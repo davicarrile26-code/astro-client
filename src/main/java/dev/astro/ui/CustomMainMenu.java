@@ -73,8 +73,12 @@ public final class CustomMainMenu extends GuiMainMenu {
         fontRendererObj.drawStringWithShadow("FIRED CLIENT",tx+68,ty+23,WHITE);
         fontRendererObj.drawStringWithShadow("1.8.9  -  v"+AstroClient.VERSION,tx+68,ty+39,MUTED);
 
+        // Cover vanilla/Forge version and branding lines drawn by GuiMainMenu
+        // in the lower-left corner, then show a single FIRED status label.
+        RenderUtil.drawRoundedRect(8, height - 27, 190, height - 5, 5, 0xE5101117);
+        RenderUtil.drawOutline(8, height - 27, 190, height - 5, 0x55FF4A16);
         fontRendererObj.drawStringWithShadow("FIRED CLIENT  /  v"+AstroClient.VERSION,
-                10,height-12,0xFFB5B5BC);
+                17,height-19,0xFFF0F0F2);
     }
 
     @Override protected void actionPerformed(GuiButton b)throws IOException {
