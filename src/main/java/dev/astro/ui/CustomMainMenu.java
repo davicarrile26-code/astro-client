@@ -19,7 +19,7 @@ public final class CustomMainMenu extends GuiMainMenu {
     private static final int MUTED = 0xFFB5B5BC;
     private static final int BTN = 0xB52B3036;
     private static final int HOVER = 0xE5454B52;
-    private static final int SINGLE=1, MULTI=2, OPTIONS=4, QUIT=5, MODS=6, LANGUAGE=7;
+    private static final int SINGLE=1, MULTI=2, OPTIONS=4, QUIT=5, MODS=6, LANGUAGE=7, COSMETICS=8;
     private static final ResourceLocation FIRED_ICON = new ResourceLocation("firedclient", "textures/gui/fired.png");
 
     @Override public void initGui() {
@@ -35,13 +35,14 @@ public final class CustomMainMenu extends GuiMainMenu {
         buttonList.add(new FlatButton(MULTI, primaryX, primaryY + 50, primaryW, primaryH, "M U L T I P L A Y E R"));
 
         // Four compact shortcut tiles along the bottom, following Lunar's menu rhythm.
-        int tile = 42, gap = 10;
-        int utilityX = width / 2 - (tile * 2 + gap * 3);
+        int tile = 42, gap = 9;
+        int utilityX = width / 2 - (tile * 2 + gap * 2) - (tile + gap) / 2;
         int utilityY = height - 58;
         buttonList.add(new FlatButton(OPTIONS, utilityX, utilityY, tile, tile, ""));
         buttonList.add(new FlatButton(LANGUAGE, utilityX + tile + gap, utilityY, tile, tile, ""));
         buttonList.add(new FlatButton(MODS, utilityX + (tile + gap) * 2, utilityY, tile, tile, ""));
-        buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 3, utilityY, tile, tile, ""));
+        buttonList.add(new FlatButton(COSMETICS, utilityX + (tile + gap) * 3, utilityY, tile, tile, ""));
+        buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 4, utilityY, tile, tile, ""));
     }
 
     @Override public void drawScreen(int mx,int my,float partialTicks) {
@@ -86,6 +87,7 @@ public final class CustomMainMenu extends GuiMainMenu {
             case SINGLE: mc.displayGuiScreen(new GuiSelectWorld(this)); break;
             case MULTI: mc.displayGuiScreen(new GuiMultiplayer(this)); break;
             case MODS: mc.displayGuiScreen(new ClickGUI()); break;
+            case COSMETICS: mc.displayGuiScreen(new CosmeticsGUI(this)); break;
             case OPTIONS: mc.displayGuiScreen(new GuiOptions(this,mc.gameSettings)); break;
             case LANGUAGE: mc.displayGuiScreen(new GuiLanguage(this,mc.gameSettings,mc.getLanguageManager())); break;
             case QUIT: mc.shutdown(); break;
@@ -150,6 +152,28 @@ public final class CustomMainMenu extends GuiMainMenu {
                     org.lwjgl.opengl.GL11.glVertex2f(cx+(float)Math.cos(a)*4.5F,
                             cy+(float)Math.sin(a)*9.0F);
                 }
+                org.lwjgl.opengl.GL11.glEnd();
+            } else if (id == COSMETICS) {
+                // Shirt/clothing symbol used for the cosmetics shortcut, in the familiar client style.
+                org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINE_LOOP);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-5,cy-9);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-10,cy-5);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-7,cy+1);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-4,cy-1);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-4,cy+9);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+4,cy+9);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+4,cy-1);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+7,cy+1);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+10,cy-5);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+5,cy-9);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+2,cy-6);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-2,cy-6);
+                org.lwjgl.opengl.GL11.glEnd();
+                org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINES);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-2,cy-6);
+                org.lwjgl.opengl.GL11.glVertex2f(cx,cy-2);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+2,cy-6);
+                org.lwjgl.opengl.GL11.glVertex2f(cx,cy-2);
                 org.lwjgl.opengl.GL11.glEnd();
             } else if (id == QUIT) {
                 org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINES);
