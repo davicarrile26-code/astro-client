@@ -57,8 +57,8 @@ public final class ClickGUI extends GuiScreen {
 
     private int[] bounds() {
         ScaledResolution sr = new ScaledResolution(mc);
-        int w = Math.min(Math.max(300, (int)(sr.getScaledWidth() * .78f)), sr.getScaledWidth() - 16);
-        int h = Math.min(Math.max(230, (int)(sr.getScaledHeight() * .82f)), sr.getScaledHeight() - 16);
+        int w = Math.min(Math.max(300, (int)(sr.getScaledWidth() * .96f)), sr.getScaledWidth() - 16);
+        int h = Math.min(Math.max(230, (int)(sr.getScaledHeight() * .94f)), sr.getScaledHeight() - 16);
         w = Math.max(1, w);
         h = Math.max(1, h);
         return new int[]{(sr.getScaledWidth()-w)/2, (sr.getScaledHeight()-h)/2, w, h};
