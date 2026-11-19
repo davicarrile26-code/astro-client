@@ -1,11 +1,8 @@
 package dev.astro;
 
 import dev.astro.command.ApiKeyCommand;
-import dev.astro.event.EventBus;
-import dev.astro.module.ModuleManager;
-import dev.astro.ui.HUD;
+import dev.astro.engine.FiredEngine;
 import dev.astro.util.AstroUsers;
-import dev.astro.util.ConfigManager;
 import dev.astro.util.HypixelAPI;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -15,10 +12,10 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.lwjgl.input.Keyboard;
 
-
 /**
- * FIRED Client — a Forge 1.8.9 client with a modular HUD and ClickGUI.
- * The legacy Java package and mod id are retained for compatibility.
+ * FIRED Client bootstrap adapter for the current Forge 1.8.9 runtime.
+ * FIRED-owned services live in FiredEngine; Forge is currently only the
+ * Minecraft launch/event integration and will remain until a replacement exists.
  */
 @Mod(modid = AstroClient.MOD_ID, name = AstroClient.NAME, version = AstroClient.VERSION)
 public class AstroClient {
@@ -30,12 +27,9 @@ public class AstroClient {
     @Mod.Instance(MOD_ID)
     public static AstroClient INSTANCE;
 
-    private EventBus eventBus;
-    private ModuleManager moduleManager;
-    private ConfigManager configManager;
+    private FiredEngine engine;
     private HypixelAPI hypixelAPI;
     private AstroUsers astroUsers;
-    private HUD hud;
 
     public static KeyBinding keyOpenGui;
     public static KeyBinding keyHudEditor;
@@ -44,18 +38,11 @@ public class AstroClient {
     public void init(FMLInitializationEvent event) {
         System.out.println("[" + NAME + "] Initialising v" + VERSION + "...");
 
-        eventBus = new EventBus();
-        moduleManager = new ModuleManager();
-        configManager = new ConfigManager();
+        // Start FIRED's own runtime before attaching the Minecraft adapter.
+        engine = new FiredEngine();
+        engine.start();
+
         hypixelAPI = new HypixelAPI();
-        hud = new HUD();
-
-        eventBus.register(hud);
-        moduleManager.init();
-
-        configManager.init();
-        configManager.load();
-
         hypixelAPI.init();
 
         astroUsers = new AstroUsers();
@@ -68,17 +55,27 @@ public class AstroClient {
         ClientRegistry.registerKeyBinding(keyOpenGui);
         ClientRegistry.registerKeyBinding(keyHudEditor);
 
+        // Temporary Forge adapter: replace only after FIRED has its own
+        // LaunchWrapper/coremod bootstrap and complete game-hook coverage.
         MinecraftForge.EVENT_BUS.register(new dev.astro.event.ForgeEventBridge());
 
-        System.out.println("[" + NAME + "] Loaded " +
-                moduleManager.getModules().size() + " modules.");
+        System.out.println("[" + NAME + "] FIRED Engine is "
+                + engine.getState() + ".");
     }
 
-    public EventBus getEventBus() { return eventBus; }
-    public ModuleManager getModuleManager() { return moduleManager; }
-    public ConfigManager getConfigManager() { return configManager; }
+    public FiredEngine getEngine() { return engine; }
+    public dev.astro.event.EventBus getEventBus() {
+        return engine == null ? null : engine.getEventBus();
+    }
+    public dev.astro.module.ModuleManager getModuleManager() {
+        return engine == null ? null : engine.getModuleManager();
+    }
+    public dev.astro.util.ConfigManager getConfigManager() {
+        return engine == null ? null : engine.getConfigManager();
+    }
     public HypixelAPI getHypixelAPI() { return hypixelAPI; }
     public AstroUsers getAstroUsers() { return astroUsers; }
-    public HUD getHud() { return hud; }
-
+    public dev.astro.ui.HUD getHud() {
+        return engine == null ? null : engine.getHud();
+    }
 }
