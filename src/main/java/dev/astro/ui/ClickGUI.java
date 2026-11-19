@@ -24,7 +24,7 @@ import java.util.Map;
  * Uses only Minecraft 1.8.9 / LWJGL 2 rendering APIs.
  */
 public final class ClickGUI extends GuiScreen {
-    private static final int HEADER_H = 62;
+    private static final int HEADER_H = 58;
     private static final int SIDEBAR_W = 205;
     private static final int CARD_H = 205;
     private static final int GAP = 9;
@@ -33,11 +33,11 @@ public final class ClickGUI extends GuiScreen {
     private static final int TOGGLE_H = 13;
     private static final int SCROLLBAR_W = 3;
 
-    private static final int PANEL_BG = 0xF0121217;
-    private static final int HEADER_BG = 0xF00D0D11;
-    private static final int SIDEBAR_BG = 0xF00F0F14;
-    private static final int CARD_BG = 0xF01D1D23;
-    private static final int CARD_HOVER = 0xF02A2525;
+    private static final int PANEL_BG = 0x70121217;
+    private static final int HEADER_BG = 0x8A0D0D11;
+    private static final int SIDEBAR_BG = 0x700F0F14;
+    private static final int CARD_BG = 0x50303034;
+    private static final int CARD_HOVER = 0x8040444C;
     private static final int ACCENT = 0xFFFF4A16;
     private static final int ACCENT_2 = 0xFFFF8528;
     private static final int TEXT = 0xFFF0F0F2;
@@ -85,7 +85,7 @@ public final class ClickGUI extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawDefaultBackground();
+        // Keep the live game scene visible behind the translucent interface.
         int[] b = bounds();
         drawPanel(mc.fontRendererObj, b[0], b[1], b[2], b[3], mouseX, mouseY);
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -111,7 +111,11 @@ public final class ClickGUI extends GuiScreen {
         fr.drawStringWithShadow("Available Mods",x+SIDEBAR_W+12,y+23,TEXT);
         int searchW=Math.max(82,Math.min(190,w/3));
         int searchX=right-searchW-12;
-        RenderUtil.drawRoundedRect(searchX,tabY,searchX+searchW,tabY+27,4,0xFF202027);
+        int addW=100, addX=searchX-addW-8;
+        RenderUtil.drawRoundedRect(addX,tabY,addX+addW,tabY+27,4,0x603A3A40);
+        RenderUtil.drawOutline(addX,tabY,addX+addW,tabY+27,0x66777777);
+        fr.drawStringWithShadow("Add Mods",addX+18,tabY+9,TEXT);
+        RenderUtil.drawRoundedRect(searchX,tabY,searchX+searchW,tabY+27,4,0x70202027);
         fr.drawStringWithShadow("⌕",searchX+9,tabY+9,ACCENT_2);
         String searchLabel=searchQuery.length()==0?"Search...":searchQuery;
         fr.drawStringWithShadow(searchLabel,searchX+25,tabY+9,
@@ -129,7 +133,7 @@ public final class ClickGUI extends GuiScreen {
                 contentX,contentY+13,MUTED);
 
         int gridY=contentY+31;
-        int cols=contentW>=760?4:(contentW>=520?3:(contentW>=340?2:1));
+        int cols=contentW>=700?4:(contentW>=480?3:(contentW>=300?2:1));
         int cardW=(contentW-(cols-1)*GAP-6)/cols;
         List<Module> mods=filteredModules();
         int rows=(mods.size()+cols-1)/cols;
