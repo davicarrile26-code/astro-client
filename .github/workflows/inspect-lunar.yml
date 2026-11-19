@@ -1,0 +1,48 @@
+name: Inspect Lunar archive
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "lunar.rar"
+      - ".github/workflows/inspect-lunar.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download archive from this repository
+        run: |
+          curl -fL --retry 3 --retry-delay 2 \
+            "https://raw.githubusercontent.com/davicarrile26-code/astro-client/main/lunar.rar" \
+            -o lunar.rar
+          test -s lunar.rar
+          ls -lh lunar.rar
+
+      - name: Install archive extractor
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full
+
+      - name: Extract and create inventory
+        run: |
+          7z l lunar.rar
+          mkdir -p lunar-extracted
+          7z x lunar.rar -olunar-extracted -y
+          find lunar-extracted -type f -printf '%P\n' | sort > lunar-inventory.txt
+          echo "Files extracted: $(wc -l < lunar-inventory.txt)"
+          test -s lunar-inventory.txt
+          zip -qr lunar-inspection.zip lunar-extracted lunar-inventory.txt
+
+      - name: Upload extracted archive and inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: lunar-inspection
+          path: |
+            lunar-inspection.zip
+            lunar-inventory.txt
+          if-no-files-found: error
+          retention-days: 7
