@@ -4,6 +4,7 @@ import dev.astro.AstroClient;
 import dev.astro.util.RenderUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.client.renderer.GlStateManager;
 import java.io.IOException;
 
@@ -18,7 +19,8 @@ public final class CustomMainMenu extends GuiMainMenu {
     private static final int MUTED = 0xFFB5B5BC;
     private static final int BTN = 0xB52B3036;
     private static final int HOVER = 0xE5454B52;
-    private static final int SINGLE=1, MULTI=2, OPTIONS=4, QUIT=5, MODS=6;
+    private static final int SINGLE=1, MULTI=2, OPTIONS=4, QUIT=5, MODS=6, LANGUAGE=7;
+    private static final ResourceLocation FIRED_ICON = new ResourceLocation("firedclient", "textures/gui/fired.png");
 
     @Override public void initGui() {
         super.initGui();
@@ -32,16 +34,14 @@ public final class CustomMainMenu extends GuiMainMenu {
         buttonList.add(new FlatButton(SINGLE, primaryX, primaryY, primaryW, primaryH, "S I N G L E P L A Y E R"));
         buttonList.add(new FlatButton(MULTI, primaryX, primaryY + 50, primaryW, primaryH, "M U L T I P L A Y E R"));
 
-        // Small utility row along the bottom, like the four Lunar shortcuts.
+        // Four compact shortcut tiles along the bottom, following Lunar's menu rhythm.
         int tile = 42, gap = 10;
-        int utilityX = width / 2 - 115;
-        int utilityY = height - 53;
+        int utilityX = width / 2 - (tile * 2 + gap * 3);
+        int utilityY = height - 58;
         buttonList.add(new FlatButton(OPTIONS, utilityX, utilityY, tile, tile, "⚙"));
-        buttonList.add(new FlatButton(MODS, utilityX + tile + gap, utilityY, tile, tile, "F"));
-        buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 2, utilityY, tile, tile, "×"));
-
-        int clientW=Math.min(230,Math.max(150,width/4));
-        buttonList.add(new FlatButton(MODS,width-clientW-18,height-116,clientW,100,""));
+        buttonList.add(new FlatButton(LANGUAGE, utilityX + tile + gap, utilityY, tile, tile, "文"));
+        buttonList.add(new FlatButton(MODS, utilityX + (tile + gap) * 2, utilityY, tile, tile, "F"));
+        buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 3, utilityY, tile, tile, "×"));
     }
 
     @Override public void drawScreen(int mx,int my,float partialTicks) {
@@ -49,41 +49,29 @@ public final class CustomMainMenu extends GuiMainMenu {
         // Softly darken the panorama without changing its composition.
         drawRect(0,0,width,height,0x24000000);
 
-        String brand="FIRED";
-        GlStateManager.pushMatrix();
-        float scale = Math.min(3.2F, Math.max(2.3F, width / 350.0F));
-        GlStateManager.scale(scale,scale,1.0F);
-        int logoX = (int)(width/(2.0F*scale)-fontRendererObj.getStringWidth(brand)/2.0F);
-        int logoY = (int)(height*0.105F/scale);
-        fontRendererObj.drawStringWithShadow(brand,logoX,logoY,WHITE);
-        GlStateManager.popMatrix();
-
+        // FIRED icon and wordmark replace Lunar branding; keep the Minecraft panorama.
+        int logoSize = Math.min(58, Math.max(40, width / 18));
+        int logoX = width / 2 - logoSize / 2;
+        int logoY = Math.max(28, (int)(height * 0.075F));
+        mc.getTextureManager().bindTexture(FIRED_ICON);
+        drawModalRectWithCustomSizedTexture(logoX, logoY, 0, 0, logoSize, logoSize, 256, 256);
+        String brand="FIRED CLIENT";
+        int brandY=logoY+logoSize+7;
+        fontRendererObj.drawStringWithShadow(brand, width/2-fontRendererObj.getStringWidth(brand)/2, brandY, WHITE);
         String subtitle="MINECRAFT 1.8.9";
-        fontRendererObj.drawStringWithShadow(subtitle,
-                width/2-fontRendererObj.getStringWidth(subtitle)/2,
-                (int)(height*0.105F)+48,MUTED);
-        RenderUtil.drawGradientH(width/2-72,(int)(height*0.105F)+40,
-                width/2+72,(int)(height*0.105F)+42,0x00FF4A16,ORANGE);
+        fontRendererObj.drawStringWithShadow(subtitle, width/2-fontRendererObj.getStringWidth(subtitle)/2, brandY+15, MUTED);
+        RenderUtil.drawGradientH(width/2-72,brandY+29,width/2+72,brandY+31,0x00FF4A16,ORANGE);
 
-        // Large lower-right client tile occupies the same visual anchor as Lunar's.
+        // Lower-right FIRED client tile.
         int tileW=Math.min(230,Math.max(150,width/4));
-        int tileH=100, tx=width-tileW-18, ty=height-tileH-16;
+        int tileH=76, tx=width-tileW-18, ty=height-tileH-16;
         boolean over=mx>=tx&&mx<tx+tileW&&my>=ty&&my<ty+tileH;
         RenderUtil.drawRoundedRect(tx,ty,tx+tileW,ty+tileH,7,over?0xE5452420:0xD51A1720);
         RenderUtil.drawOutline(tx,ty,tx+tileW,ty+tileH,over?0xB5FF4A16:0x55777777);
-        String mark="F";
-        GlStateManager.pushMatrix();
-        GlStateManager.scale(2.2F,2.2F,1F);
-        fontRendererObj.drawStringWithShadow(mark,
-                (tx+tileW/2-fontRendererObj.getStringWidth(mark)*1.1F)/2F,
-                (ty+22)/2F,ORANGE);
-        GlStateManager.popMatrix();
-        fontRendererObj.drawStringWithShadow("FIRED CLIENT",
-                tx+(tileW-fontRendererObj.getStringWidth("FIRED CLIENT"))/2,
-                ty+64,WHITE);
-        fontRendererObj.drawStringWithShadow("1.8.9  •  v"+AstroClient.VERSION,
-                tx+(tileW-fontRendererObj.getStringWidth("1.8.9  •  v"+AstroClient.VERSION))/2,
-                ty+78,MUTED);
+        mc.getTextureManager().bindTexture(FIRED_ICON);
+        drawModalRectWithCustomSizedTexture(tx+12,ty+14,0,0,46,46,256,256);
+        fontRendererObj.drawStringWithShadow("FIRED CLIENT",tx+68,ty+23,WHITE);
+        fontRendererObj.drawStringWithShadow("1.8.9  -  v"+AstroClient.VERSION,tx+68,ty+39,MUTED);
 
         fontRendererObj.drawStringWithShadow("FIRED CLIENT  /  v"+AstroClient.VERSION,
                 10,height-12,0xFFB5B5BC);
@@ -95,6 +83,7 @@ public final class CustomMainMenu extends GuiMainMenu {
             case MULTI: mc.displayGuiScreen(new GuiMultiplayer(this)); break;
             case MODS: mc.displayGuiScreen(new ClickGUI()); break;
             case OPTIONS: mc.displayGuiScreen(new GuiOptions(this,mc.gameSettings)); break;
+            case LANGUAGE: mc.displayGuiScreen(new GuiLanguage(this,mc.gameSettings,mc.getLanguageManager())); break;
             case QUIT: mc.shutdown(); break;
             default: super.actionPerformed(b);
         }
