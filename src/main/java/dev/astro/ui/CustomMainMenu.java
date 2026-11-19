@@ -50,22 +50,22 @@ public final class CustomMainMenu extends GuiScreen {
         drawString(fontRendererObj,"1.8.9",px+30,py+panelH-42,MUTED);
 
         int cx=width/2;
-        RenderUtil.drawRoundedRect(cx-31,py+43,cx+31,py+105,12,ORANGE);
+        RenderUtil.drawRoundedRect(cx-24,py+28,cx+24,py+76,10,ORANGE);
         GlStateManager.pushMatrix();
         GlStateManager.scale(2.0F,2.0F,1.0F);
-        fontRendererObj.drawStringWithShadow("F",(cx-11)/2F,(py+53)/2F,0xFFFFF4EE);
+        fontRendererObj.drawStringWithShadow("F",(cx-11)/2F,(py+39)/2F,0xFFFFF4EE);
         GlStateManager.popMatrix();
         String title="FIRED";
         GlStateManager.pushMatrix();
         float scale=3.4F;
         GlStateManager.scale(scale,scale,1F);
         fontRendererObj.drawStringWithShadow(title,cx/scale-fontRendererObj.getStringWidth(title)/2F,
-                (py+52)/scale,WHITE);
+                (py+90)/scale,WHITE);
         GlStateManager.popMatrix();
-        RenderUtil.drawGradientH(cx-72,py+94,cx+72,py+97,ORANGE,ORANGE2);
+        RenderUtil.drawGradientH(cx-72,py+132,cx+72,py+135,ORANGE,ORANGE2);
         String subtitle="YOUR MINECRAFT EXPERIENCE";
         fontRendererObj.drawStringWithShadow(subtitle,cx-fontRendererObj.getStringWidth(subtitle)/2F,
-                py+106,MUTED);
+                py+144,MUTED);
 
         super.drawScreen(mx,my,partialTicks);
         String footer="Minecraft 1.8.9  •  FIRED Client v"+AstroClient.VERSION;
