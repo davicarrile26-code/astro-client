@@ -24,10 +24,10 @@ import java.util.Map;
  * Uses only Minecraft 1.8.9 / LWJGL 2 rendering APIs.
  */
 public final class ClickGUI extends GuiScreen {
-    private static final int HEADER_H = 54;
-    private static final int SIDEBAR_W = 126;
-    private static final int CARD_H = 104;
-    private static final int GAP = 8;
+    private static final int HEADER_H = 62;
+    private static final int SIDEBAR_W = 205;
+    private static final int CARD_H = 205;
+    private static final int GAP = 9;
     private static final int SETTING_ROW_H = 20;
     private static final int TOGGLE_W = 27;
     private static final int TOGGLE_H = 13;
@@ -108,12 +108,12 @@ public final class ClickGUI extends GuiScreen {
         fr.drawStringWithShadow("CLIENT  /  MODS",x+42,y+24,MUTED);
 
         int tabY=y+9;
-        fr.drawStringWithShadow("MODS",x+154,y+17,ACCENT_2);
+        fr.drawStringWithShadow("Available Mods",x+SIDEBAR_W+12,y+23,TEXT);
         int searchW=Math.max(82,Math.min(190,w/3));
         int searchX=right-searchW-12;
         RenderUtil.drawRoundedRect(searchX,tabY,searchX+searchW,tabY+27,4,0xFF202027);
-        fr.drawStringWithShadow("Q",searchX+9,tabY+9,ACCENT_2);
-        String searchLabel=searchQuery.length()==0?"Pesquisar mods":searchQuery;
+        fr.drawStringWithShadow("⌕",searchX+9,tabY+9,ACCENT_2);
+        String searchLabel=searchQuery.length()==0?"Search...":searchQuery;
         fr.drawStringWithShadow(searchLabel,searchX+25,tabY+9,
                 searchQuery.length()==0?MUTED:TEXT);
 
@@ -129,7 +129,7 @@ public final class ClickGUI extends GuiScreen {
                 contentX,contentY+13,MUTED);
 
         int gridY=contentY+31;
-        int cols=contentW>=520?3:(contentW>=340?2:1);
+        int cols=contentW>=760?4:(contentW>=520?3:(contentW>=340?2:1));
         int cardW=(contentW-(cols-1)*GAP-6)/cols;
         List<Module> mods=filteredModules();
         int rows=(mods.size()+cols-1)/cols;
@@ -282,7 +282,7 @@ public final class ClickGUI extends GuiScreen {
         }
         int contentX=x+SIDEBAR_W+12,contentY=y+HEADER_H+12;
         int contentW=w-SIDEBAR_W-24,contentH=h-HEADER_H-22;
-        int cols=contentW>=520?3:(contentW>=340?2:1);
+        int cols=contentW>=760?4:(contentW>=520?3:(contentW>=340?2:1));
         int cardW=(contentW-(cols-1)*GAP-6)/cols;
         int gridY=contentY+31;
         List<Module> mods=filteredModules();
