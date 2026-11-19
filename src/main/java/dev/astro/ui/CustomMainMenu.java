@@ -39,6 +39,9 @@ public final class CustomMainMenu extends GuiMainMenu {
         buttonList.add(new FlatButton(OPTIONS, utilityX, utilityY, tile, tile, "⚙"));
         buttonList.add(new FlatButton(MODS, utilityX + tile + gap, utilityY, tile, tile, "F"));
         buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 2, utilityY, tile, tile, "×"));
+
+        int clientW=Math.min(230,Math.max(150,width/4));
+        buttonList.add(new FlatButton(MODS,width-clientW-18,height-116,clientW,100,""));
     }
 
     @Override public void drawScreen(int mx,int my,float partialTicks) {
