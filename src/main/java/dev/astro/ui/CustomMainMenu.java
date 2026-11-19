@@ -38,10 +38,10 @@ public final class CustomMainMenu extends GuiMainMenu {
         int tile = 42, gap = 10;
         int utilityX = width / 2 - (tile * 2 + gap * 3);
         int utilityY = height - 58;
-        buttonList.add(new FlatButton(OPTIONS, utilityX, utilityY, tile, tile, "⚙"));
-        buttonList.add(new FlatButton(LANGUAGE, utilityX + tile + gap, utilityY, tile, tile, "文"));
-        buttonList.add(new FlatButton(MODS, utilityX + (tile + gap) * 2, utilityY, tile, tile, "F"));
-        buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 3, utilityY, tile, tile, "×"));
+        buttonList.add(new FlatButton(OPTIONS, utilityX, utilityY, tile, tile, ""));
+        buttonList.add(new FlatButton(LANGUAGE, utilityX + tile + gap, utilityY, tile, tile, ""));
+        buttonList.add(new FlatButton(MODS, utilityX + (tile + gap) * 2, utilityY, tile, tile, ""));
+        buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 3, utilityY, tile, tile, ""));
     }
 
     @Override public void drawScreen(int mx,int my,float partialTicks) {
@@ -102,10 +102,77 @@ public final class CustomMainMenu extends GuiMainMenu {
             RenderUtil.drawRoundedRect(xPosition,yPosition,xPosition+width,yPosition+height,5,bg);
             RenderUtil.drawOutline(xPosition,yPosition,xPosition+width,yPosition+height,
                     hovered?0x90FF4A16:0x40777777);
-            int color=hovered?WHITE:0xFFE0E0E0;
-            mc.fontRendererObj.drawStringWithShadow(displayString,
-                    xPosition+(width-mc.fontRendererObj.getStringWidth(displayString))/2,
-                    yPosition+(height-8)/2,color);
+            int color=hovered?0xFFFF6A32:0xFFF0F0F2;
+            drawShortcutIcon(mc, xPosition + width / 2, yPosition + height / 2, color);
+        }
+
+        private void drawShortcutIcon(Minecraft mc, int cx, int cy, int color) {
+            if (id == MODS) {
+                mc.getTextureManager().bindTexture(FIRED_ICON);
+                drawModalRectWithCustomSizedTexture(cx-12, cy-12, 0, 0, 24, 24, 256, 256);
+                return;
+            }
+            org.lwjgl.opengl.GL11.glPushMatrix();
+            org.lwjgl.opengl.GL11.glLineWidth(2.0F);
+            org.lwjgl.opengl.GL11.glColor4f(
+                    ((color >> 16) & 255) / 255.0F,
+                    ((color >> 8) & 255) / 255.0F,
+                    (color & 255) / 255.0F, 1.0F);
+            org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_TEXTURE_2D);
+            org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_LINE_SMOOTH);
+            if (id == OPTIONS) {
+                // Clean settings gear: circular hub with eight short teeth.
+                org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINES);
+                for (int i=0;i<8;i++) {
+                    double a=Math.PI*2*i/8.0;
+                    float x1=cx+(float)Math.cos(a)*8.0F;
+                    float y1=cy+(float)Math.sin(a)*8.0F;
+                    float x2=cx+(float)Math.cos(a)*11.0F;
+                    float y2=cy+(float)Math.sin(a)*11.0F;
+                    org.lwjgl.opengl.GL11.glVertex2f(x1,y1);
+                    org.lwjgl.opengl.GL11.glVertex2f(x2,y2);
+                }
+                org.lwjgl.opengl.GL11.glEnd();
+                circle(cx,cy,7,org.lwjgl.opengl.GL11.GL_LINE_LOOP);
+                circle(cx,cy,2.5F,org.lwjgl.opengl.GL11.GL_LINE_LOOP);
+            } else if (id == LANGUAGE) {
+                // Globe with latitude and longitude lines.
+                circle(cx,cy,10,org.lwjgl.opengl.GL11.GL_LINE_LOOP);
+                org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINES);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-9,cy);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+9,cy);
+                org.lwjgl.opengl.GL11.glVertex2f(cx,cy-9);
+                org.lwjgl.opengl.GL11.glVertex2f(cx,cy+9);
+                org.lwjgl.opengl.GL11.glEnd();
+                org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINE_LOOP);
+                for(int i=0;i<32;i++){
+                    double a=Math.PI*2*i/32.0;
+                    org.lwjgl.opengl.GL11.glVertex2f(cx+(float)Math.cos(a)*4.5F,
+                            cy+(float)Math.sin(a)*9.0F);
+                }
+                org.lwjgl.opengl.GL11.glEnd();
+            } else if (id == QUIT) {
+                org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_LINES);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-7,cy-7);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+7,cy+7);
+                org.lwjgl.opengl.GL11.glVertex2f(cx+7,cy-7);
+                org.lwjgl.opengl.GL11.glVertex2f(cx-7,cy+7);
+                org.lwjgl.opengl.GL11.glEnd();
+            }
+            org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_LINE_SMOOTH);
+            org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_TEXTURE_2D);
+            org.lwjgl.opengl.GL11.glColor4f(1,1,1,1);
+            org.lwjgl.opengl.GL11.glPopMatrix();
+        }
+
+        private void circle(float cx,float cy,float radius,int mode) {
+            org.lwjgl.opengl.GL11.glBegin(mode);
+            for(int i=0;i<48;i++){
+                double a=Math.PI*2*i/48.0;
+                org.lwjgl.opengl.GL11.glVertex2f(cx+(float)Math.cos(a)*radius,
+                        cy+(float)Math.sin(a)*radius);
+            }
+            org.lwjgl.opengl.GL11.glEnd();
         }
     }
 }
