@@ -3,6 +3,7 @@ package dev.astro.ui;
 import dev.astro.AstroClient;
 import dev.astro.util.RenderUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.GlStateManager;
 import java.awt.Color;
