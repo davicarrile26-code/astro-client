@@ -11,7 +11,6 @@ import dev.astro.module.setting.Setting;
 import dev.astro.util.RenderUtil;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.ScaledResolution;
 
 import java.io.IOException;
@@ -101,27 +100,21 @@ public final class ClickGUI extends GuiScreen {
 
         // Badlion reference structure: brand at the top, tabs across the header,
         // filter rail on the left and equal-sized module tiles in a 3-column grid.
-        RenderUtil.drawRoundedRect(x+8,y+9,x+32,y+33,5,ACCENT);
-        fr.drawStringWithShadow("F",x+16,y+17,TEXT);
-        fr.drawStringWithShadow("FIRED",x+40,y+11,TEXT);
-        fr.drawStringWithShadow("CLIENT",x+40,y+23,MUTED);
+        // Original FIRED flame mark (no third-party client branding).
+        RenderUtil.drawRoundedRect(x+8,y+9,x+34,y+35,6,ACCENT);
+        RenderUtil.drawRoundedRect(x+17,y+14,x+25,y+29,4,0xFFFFB044);
+        RenderUtil.drawRoundedRect(x+20,y+18,x+25,y+29,3,0xFFFFE0A0);
+        fr.drawStringWithShadow("FIRED",x+42,y+11,TEXT);
+        fr.drawStringWithShadow("CLIENT  /  MODS",x+42,y+24,MUTED);
 
-        int tabX=x+132, tabY=y+9, tabW=Math.max(64,Math.min(104,(w-330)/3));
-        String[] tabs={"Mods","Settings","Profiles"};
-        for(int i=0;i<tabs.length;i++){
-            int tx=tabX+i*(tabW+6);
-            boolean active=i==0;
-            RenderUtil.drawRoundedRect(tx,tabY,tx+tabW,tabY+27,3,active?ACCENT:0xFF292932);
-            fr.drawStringWithShadow(tabs[i],tx+(tabW-fr.getStringWidth(tabs[i]))/2,tabY+9,
-                    active?TEXT:MUTED);
-        }
-
+        int tabY=y+9;
+        fr.drawStringWithShadow("MODS",x+154,y+17,ACCENT_2);
         int searchW=Math.max(82,Math.min(190,w/3));
         int searchX=right-searchW-12;
         RenderUtil.drawRoundedRect(searchX,tabY,searchX+searchW,tabY+27,4,0xFF202027);
-        fr.drawStringWithShadow("⌕",searchX+8,tabY+9,ACCENT_2);
-        String searchLabel=searchQuery.length()==0?"Search mods":searchQuery;
-        fr.drawStringWithShadow(searchLabel,searchX+24,tabY+9,
+        fr.drawStringWithShadow("Q",searchX+9,tabY+9,ACCENT_2);
+        String searchLabel=searchQuery.length()==0?"Pesquisar mods":searchQuery;
+        fr.drawStringWithShadow(searchLabel,searchX+25,tabY+9,
                 searchQuery.length()==0?MUTED:TEXT);
 
         RenderUtil.drawRect(x,y+HEADER_H,x+SIDEBAR_W,bottom,SIDEBAR_BG);
@@ -157,18 +150,28 @@ public final class ClickGUI extends GuiScreen {
             RenderUtil.drawRoundedRect(rx,ry,rx+cardW,ry+CARD_H,3,
                     hover?0xFF303541:CARD_BG);
             RenderUtil.drawOutline(rx,ry,rx+cardW,ry+CARD_H,
-                    m.isEnabled()?0x8050BDEB:0x305F6878);
+                    m.isEnabled()?0xA0FF6428:0x305F4538);
             String name=m.getName();
-            fr.drawStringWithShadow(name,rx+(cardW-fr.getStringWidth(name))/2,ry+8,TEXT);
+            // Compact module tile: FIRED icon, title, description and a clear state control.
+            RenderUtil.drawRoundedRect(rx+10,ry+10,rx+34,ry+34,5,
+                    m.isEnabled()?0xFF63301F:0xFF303039);
             String glyph=name.length()>0?name.substring(0,1).toUpperCase():"?";
-            fr.drawStringWithShadow(glyph,rx+(cardW-fr.getStringWidth(glyph))/2,ry+37,
-                    m.isEnabled()?ACCENT_2:0xFFE8EAF0);
-            int toggleW=30,toggleX=rx+(cardW-toggleW)/2;
+            fr.drawStringWithShadow(glyph,rx+18,ry+18,m.isEnabled()?ACCENT_2:TEXT);
+            fr.drawStringWithShadow(name,rx+42,ry+12,TEXT);
+            String description=m.getDescription()==null?"":m.getDescription();
+            if(description.length()>0){
+                int maxChars=Math.max(12,(cardW-58)/4);
+                if(description.length()>maxChars)description=description.substring(0,maxChars-3)+"...";
+                fr.drawStringWithShadow(description,rx+42,ry+25,MUTED);
+            }
+            fr.drawStringWithShadow(m.isEnabled()?"ATIVADO":"DESATIVADO",
+                    rx+12,ry+CARD_H-19,m.isEnabled()?ACCENT_2:MUTED);
+            int toggleW=30,toggleX=rx+cardW-48;
             drawToggle(toggleX,ry+CARD_H-22,toggleW,13,m.isEnabled()?1f:0f);
             if(m.hasSettings()){
-                RenderUtil.drawRoundedRect(rx+cardW-25,ry+CARD_H-25,rx+cardW-7,ry+CARD_H-7,3,
+                RenderUtil.drawRoundedRect(rx+cardW-25,ry+8,rx+cardW-7,ry+26,4,
                         settingsModule==m?0xFF493027:0xFF34343D);
-                fr.drawStringWithShadow("⚙",rx+cardW-21,ry+CARD_H-20,
+                fr.drawStringWithShadow("⚙",rx+cardW-21,ry+12,
                         settingsModule==m?ACCENT_2:MUTED);
             }
         }
@@ -291,7 +294,7 @@ public final class ClickGUI extends GuiScreen {
             int col=i%cols,row=i/cols,cx=contentX+col*(cardW+GAP),cy=gridY+row*(CARD_H+GAP)-scroll;
             if(mx<cx||mx>=cx+cardW||my<cy||my>=cy+CARD_H)continue;
             Module module=mods.get(i);
-            if(module.hasSettings()&&mx>=cx+cardW-29&&my>=cy+CARD_H-29){settingsModule=module;return;}
+            if(module.hasSettings()&&mx>=cx+cardW-30&&mx<=cx+cardW-5&&my>=cy+5&&my<=cy+31){settingsModule=module;return;}
             module.toggle();saveConfig();return;
         }
     }
