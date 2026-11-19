@@ -27,7 +27,7 @@ import java.util.Map;
 public final class ClickGUI extends GuiScreen {
     private static final int HEADER_H = 42;
     private static final int SIDEBAR_W = 112;
-    private static final int CARD_H = 62;
+    private static final int CARD_H = 38;
     private static final int GAP = 8;
     private static final int SETTING_ROW_H = 20;
     private static final int TOGGLE_W = 27;
@@ -93,87 +93,91 @@ public final class ClickGUI extends GuiScreen {
     }
 
     private void drawPanel(FontRenderer fr, int x, int y, int w, int h, int mx, int my) {
-        int right = x+w, bottom = y+h;
-        RenderUtil.drawRoundedRect(x, y, right, bottom, 5, PANEL_BG);
-        RenderUtil.drawRoundedRect(x, y, right, y+HEADER_H, 5, HEADER_BG);
-        RenderUtil.drawRect(x, y+HEADER_H-5, right, y+HEADER_H, HEADER_BG);
-        RenderUtil.drawRect(x, y+HEADER_H-1, right, y+HEADER_H, LINE);
+        int right=x+w, bottom=y+h;
+        // Badlion-style window: compact navigation rail, title/search toolbar,
+        // and a clean two-column list of configurable mods.
+        RenderUtil.drawRoundedRect(x-3,y-3,right+3,bottom+3,9,0x50000000);
+        RenderUtil.drawRoundedRect(x,y,right,bottom,8,PANEL_BG);
+        RenderUtil.drawRoundedRect(x,y,right,y+HEADER_H,8,HEADER_BG);
+        RenderUtil.drawRect(x,y+HEADER_H-8,right,y+HEADER_H,HEADER_BG);
+        RenderUtil.drawRect(x,y+HEADER_H-1,right,y+HEADER_H,LINE);
 
-        // Brand and flame-like accent, kept font-safe for Minecraft 1.8.9.
-        RenderUtil.drawRoundedRect(x+13, y+10, x+35, y+32, 5, ACCENT);
-        fr.drawStringWithShadow("F", x+20, y+16, TEXT);
-        fr.drawStringWithShadow("FIRED", x+43, y+10, ACCENT);
-        fr.drawStringWithShadow("CLIENT", x+82, y+10, TEXT);
+        RenderUtil.drawRoundedRect(x+14,y+10,x+38,y+34,7,ACCENT);
+        fr.drawStringWithShadow("F",x+22,y+18,TEXT);
+        fr.drawStringWithShadow("FIRED",x+47,y+12,TEXT);
+        fr.drawStringWithShadow("CLIENT",x+47,y+23,MUTED);
 
-        int searchW = Math.max(95, Math.min(270, w-230));
-        int searchX = x + (w-searchW)/2;
-        RenderUtil.drawRoundedRect(searchX, y+10, searchX+searchW, y+33, 4, 0xFF1A1A20);
-        RenderUtil.drawOutline(searchX, y+10, searchX+searchW, y+33, 0x30FFFFFF);
-        fr.drawStringWithShadow(searchQuery.length()==0 ? "Buscar mods..." : searchQuery,
-                searchX+10, y+18, searchQuery.length()==0 ? MUTED : TEXT);
-        fr.drawStringWithShadow("HUD", right-72, y+18,
-                mx>=right-78 && mx<right-42 && my>=y && my<y+HEADER_H ? ACCENT_2 : MUTED);
-        fr.drawStringWithShadow("X", right-25, y+17,
-                mx>=right-34 && mx<=right && my>=y && my<y+HEADER_H ? 0xFFFF6666 : TEXT);
+        int searchW=Math.max(110,Math.min(245,w-270));
+        int searchX=right-searchW-48;
+        RenderUtil.drawRoundedRect(searchX,y+10,searchX+searchW,y+33,7,0xFF202027);
+        fr.drawStringWithShadow("⌕",searchX+9,y+16,ACCENT_2);
+        fr.drawStringWithShadow(searchQuery.length()==0?"Search mods":searchQuery,
+                searchX+25,y+18,searchQuery.length()==0?MUTED:TEXT);
+        fr.drawStringWithShadow("✕",right-25,y+17,TEXT);
 
-        RenderUtil.drawRect(x, y+HEADER_H, x+SIDEBAR_W, bottom, SIDEBAR_BG);
-        RenderUtil.drawRect(x+SIDEBAR_W, y+HEADER_H, x+SIDEBAR_W+1, bottom, LINE);
-        drawSidebar(fr, x, y, h, mx, my);
+        RenderUtil.drawRect(x,y+HEADER_H,x+SIDEBAR_W,bottom,SIDEBAR_BG);
+        RenderUtil.drawRect(x+SIDEBAR_W,y+HEADER_H,x+SIDEBAR_W+1,bottom,LINE);
+        drawSidebar(fr,x,y,h,mx,my);
 
-        int contentX = x+SIDEBAR_W+12;
-        int contentY = y+HEADER_H+12;
-        int contentW = w-SIDEBAR_W-24;
-        int contentH = h-HEADER_H-24;
-        fr.drawStringWithShadow(selectedCategory == null ? "Todos os mods" :
-                selectedCategory.getDisplayName(), contentX, contentY, TEXT);
-        fr.drawStringWithShadow(filteredModules().size()+" mods", contentX, contentY+13, MUTED);
+        int contentX=x+SIDEBAR_W+18, contentY=y+HEADER_H+15;
+        int contentW=w-SIDEBAR_W-34, contentH=h-HEADER_H-24;
+        fr.drawStringWithShadow(selectedCategory==null?"MODS":selectedCategory.getDisplayName().toUpperCase(),
+                contentX,contentY,TEXT);
+        fr.drawStringWithShadow(filteredModules().size()+" available",contentX,contentY+14,MUTED);
 
-        int gridY = contentY+31;
-        int cols = contentW >= 600 ? 3 : (contentW >= 390 ? 2 : 1);
-        int cardW = (contentW-(cols-1)*GAP-SCROLLBAR_W-4)/cols;
-        List<Module> mods = filteredModules();
-        int rows = (mods.size()+cols-1)/cols;
-        int totalH = rows*(CARD_H+GAP);
-        int maxScroll = Math.max(0, totalH-contentH+31);
-        int scroll = scrollOffsets.containsKey(scrollKey()) ? scrollOffsets.get(scrollKey()) : 0;
-        scroll = Math.max(0, Math.min(scroll, maxScroll));
-        scrollOffsets.put(scrollKey(), scroll);
+        int listY=contentY+34;
+        int cols=contentW>=590?2:1;
+        int gap=10;
+        int rowW=(contentW-(cols-1)*gap)/cols;
+        List<Module> mods=filteredModules();
+        int rows=(mods.size()+cols-1)/cols;
+        int totalH=rows*(CARD_H+7);
+        int maxScroll=Math.max(0,totalH-(contentH-34));
+        int scroll=scrollOffsets.containsKey(scrollKey())?scrollOffsets.get(scrollKey()):0;
+        scroll=Math.max(0,Math.min(scroll,maxScroll));
+        scrollOffsets.put(scrollKey(),scroll);
 
-        for (int i=0;i<mods.size();i++) {
-            int col=i%cols, row=i/cols;
-            int cx=contentX+col*(cardW+GAP);
-            int cy=gridY+row*(CARD_H+GAP)-scroll;
-            if (cy+CARD_H<gridY || cy>y+h-8) continue;
+        for(int i=0;i<mods.size();i++){
+            int col=i/rows;
+            int row=i%rows;
+            if(cols==1){col=0;row=i;}
+            int rx=contentX+col*(rowW+gap);
+            int ry=listY+row*(CARD_H+7)-scroll;
+            if(ry+CARD_H<listY||ry>bottom-8)continue;
             Module m=mods.get(i);
-            boolean hover=mx>=cx && mx<cx+cardW && my>=Math.max(gridY,cy) && my<Math.min(y+h-8,cy+CARD_H);
-            RenderUtil.drawRoundedRect(cx,cy,cx+cardW,cy+CARD_H,4,hover?CARD_HOVER:CARD_BG);
-            if (m.isEnabled()) RenderUtil.drawRect(cx,cy,cx+3,cy+CARD_H,ACCENT);
-            fr.drawStringWithShadow(m.getName(),cx+11,cy+10,TEXT);
-            String desc=m.getDescription();
-            int maxText=Math.max(20,cardW-24);
-            while(desc.length()>0 && fr.getStringWidth(desc)>maxText) desc=desc.substring(0,desc.length()-1);
-            if(!desc.equals(m.getDescription()) && desc.length()>3) desc=desc.substring(0,desc.length()-3)+"...";
-            fr.drawStringWithShadow(desc,cx+11,cy+25,MUTED);
+            boolean hover=mx>=rx&&mx<rx+rowW&&my>=Math.max(listY,ry)&&my<Math.min(bottom-8,ry+CARD_H);
+            RenderUtil.drawRoundedRect(rx,ry,rx+rowW,ry+CARD_H,7,
+                    hover?0xFF292931:CARD_BG);
+            if(m.isEnabled())RenderUtil.drawRoundedRect(rx+7,ry+7,rx+10,ry+CARD_H-7,2,ACCENT);
+            RenderUtil.drawRoundedRect(rx+16,ry+7,rx+40,ry+31,6,0xFF303039);
+            String glyph=m.getName().length()>0?m.getName().substring(0,1).toUpperCase():"?";
+            fr.drawStringWithShadow(glyph,rx+24-fr.getStringWidth(glyph)/2,ry+15,ACCENT_2);
+            fr.drawStringWithShadow(m.getName(),rx+48,ry+8,TEXT);
+            String desc=m.getDescription()==null?"":m.getDescription();
+            int maxText=Math.max(20,rowW-112);
+            while(desc.length()>0&&fr.getStringWidth(desc)>maxText)desc=desc.substring(0,desc.length()-1);
+            if(!desc.equals(m.getDescription())&&desc.length()>3)desc=desc.substring(0,desc.length()-3)+"...";
+            fr.drawStringWithShadow(desc,rx+48,ry+21,MUTED);
             float a=toggleAnim.containsKey(m)?toggleAnim.get(m):(m.isEnabled()?1f:0f);
-            float target=m.isEnabled()?1f:0f;
-            a+=(target-a)*.32f;
-            if(Math.abs(target-a)<.01f)a=target;
+            a+=( (m.isEnabled()?1f:0f)-a)*.35f;
+            if(Math.abs((m.isEnabled()?1f:0f)-a)<.01f)a=m.isEnabled()?1f:0f;
             toggleAnim.put(m,a);
-            drawToggle(cx+cardW-39,cy+10,TOGGLE_W,TOGGLE_H,a);
-            if(m.hasSettings()) fr.drawStringWithShadow("...",cx+cardW-25,cy+39,
-                    settingsModule==m?ACCENT:MUTED);
-            fr.drawStringWithShadow(m.isEnabled()?"ATIVO":"DESATIVADO",
-                    cx+11,cy+43,m.isEnabled()?ACCENT_2:MUTED);
+            drawToggle(rx+rowW-36,ry+12,27,13,a);
+            if(m.hasSettings()){
+                RenderUtil.drawRoundedRect(rx+rowW-66,ry+9,rx+rowW-44,ry+30,6,
+                        settingsModule==m?0xFF493027:0xFF34343D);
+                fr.drawStringWithShadow("⚙",rx+rowW-60,ry+15,
+                        settingsModule==m?ACCENT_2:MUTED);
+            }
         }
-
         if(maxScroll>0){
-            int trackX=right-8, trackY=gridY, trackH=Math.max(20,contentH-25);
-            int thumbH=Math.max(18,trackH*trackH/Math.max(trackH,totalH));
+            int trackX=right-7,trackY=listY,trackH=Math.max(20,contentH-34);
+            int thumbH=Math.max(20,trackH*trackH/Math.max(trackH,totalH));
             int thumbY=trackY+(int)((float)scroll/maxScroll*(trackH-thumbH));
-            RenderUtil.drawRoundedRect(trackX,trackY,trackX+SCROLLBAR_W,trackY+trackH,2,0x24FFFFFF);
-            RenderUtil.drawRoundedRect(trackX,thumbY,trackX+SCROLLBAR_W,thumbY+thumbH,2,ACCENT);
+            RenderUtil.drawRoundedRect(trackX,trackY,trackX+3,trackY+trackH,2,0x30FFFFFF);
+            RenderUtil.drawRoundedRect(trackX,thumbY,trackX+3,thumbY+thumbH,2,ACCENT);
         }
-        if(settingsModule!=null) drawSettingsPopup(fr,x,y,w,h,mx,my);
+        if(settingsModule!=null)drawSettingsPopup(fr,x,y,w,h,mx,my);
     }
 
     private void drawSidebar(FontRenderer fr,int x,int y,int h,int mx,int my){
@@ -281,19 +285,19 @@ public final class ClickGUI extends GuiScreen {
         }
         int contentX=x+SIDEBAR_W+12,contentY=y+HEADER_H+12;
         int contentW=w-SIDEBAR_W-24,contentH=h-HEADER_H-24;
-        int cols=contentW>=600?3:(contentW>=390?2:1);
+        int cols=contentW>=590?2:1;
         int cardW=(contentW-(cols-1)*GAP-SCROLLBAR_W-4)/cols;
-        int gridY=contentY+31;
+        int gridY=contentY+34;
         List<Module> mods=filteredModules();
         int rows=(mods.size()+cols-1)/cols,totalH=rows*(CARD_H+GAP);
         int maxScroll=Math.max(0,totalH-contentH+31);
         int scroll=scrollOffsets.containsKey(scrollKey())?scrollOffsets.get(scrollKey()):0;
         scroll=Math.max(0,Math.min(scroll,maxScroll));
         for(int i=0;i<mods.size();i++){
-            int col=i%cols,row=i/cols,cx=contentX+col*(cardW+GAP),cy=gridY+row*(CARD_H+GAP)-scroll;
+            int rows=(mods.size()+cols-1)/cols; int col=cols==1?0:i/rows,row=cols==1?i:i%rows,cx=contentX+col*(cardW+GAP),cy=gridY+row*(CARD_H+GAP)-scroll;
             if(mx<cx||mx>=cx+cardW||my<cy||my>=cy+CARD_H)continue;
             Module m=mods.get(i);
-            if(m.hasSettings() && mx>=cx+cardW-36 && my>=cy+34){settingsModule=m;return;}
+            if(m.hasSettings() && mx>=cx+cardW-70 && mx<cx+cardW-38){settingsModule=m;return;}
             m.toggle();return;
         }
     }
