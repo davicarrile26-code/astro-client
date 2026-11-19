@@ -7,48 +7,83 @@ import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.GlStateManager;
 import java.io.IOException;
 
-/** FIRED home screen: classic Minecraft/Lunar-style centered navigation. */
+/**
+ * FIRED home screen matching the Lunar reference composition:
+ * centered logo, two stacked primary buttons, bottom utility tiles,
+ * and a large client tile in the lower-right corner.
+ */
 public final class CustomMainMenu extends GuiMainMenu {
     private static final int ORANGE = 0xFFFF4A16;
     private static final int WHITE = 0xFFF4F4F6;
     private static final int MUTED = 0xFFB5B5BC;
-    private static final int BTN = 0xB018181D;
-    private static final int HOVER = 0xE52B2422;
-    private static final int BTN_W = 154, BTN_H = 28, GAP = 7;
-    private static final int SINGLE=1, MULTI=2, MODS=3, OPTIONS=4, QUIT=5;
+    private static final int BTN = 0xB52B3036;
+    private static final int HOVER = 0xE5454B52;
+    private static final int SINGLE=1, MULTI=2, OPTIONS=4, QUIT=5, MODS=6;
 
     @Override public void initGui() {
         super.initGui();
         buttonList.clear();
-        int cx=width/2;
-        int y=height/2+4;
-        int left=cx-BTN_W-GAP/2;
-        int right=cx+GAP/2;
-        buttonList.add(new FlatButton(SINGLE,left,y,BTN_W,BTN_H,"Singleplayer"));
-        buttonList.add(new FlatButton(MULTI,right,y,BTN_W,BTN_H,"Multiplayer"));
-        buttonList.add(new FlatButton(MODS,left,y+BTN_H+GAP,BTN_W,BTN_H,"FIRED Mods"));
-        buttonList.add(new FlatButton(OPTIONS,right,y+BTN_H+GAP,BTN_W,BTN_H,"Options"));
-        buttonList.add(new FlatButton(QUIT,cx-74,y+2*(BTN_H+GAP),148,24,"Quit Game"));
+
+        // The reference uses one centered vertical stack, not a button grid.
+        int primaryW = Math.min(444, Math.max(260, width - 40));
+        int primaryH = 38;
+        int primaryX = (width - primaryW) / 2;
+        int primaryY = Math.max(210, height * 41 / 100);
+        buttonList.add(new FlatButton(SINGLE, primaryX, primaryY, primaryW, primaryH, "S I N G L E P L A Y E R"));
+        buttonList.add(new FlatButton(MULTI, primaryX, primaryY + 50, primaryW, primaryH, "M U L T I P L A Y E R"));
+
+        // Small utility row along the bottom, like the four Lunar shortcuts.
+        int tile = 42, gap = 10;
+        int utilityX = width / 2 - 115;
+        int utilityY = height - 53;
+        buttonList.add(new FlatButton(OPTIONS, utilityX, utilityY, tile, tile, "⚙"));
+        buttonList.add(new FlatButton(MODS, utilityX + tile + gap, utilityY, tile, tile, "F"));
+        buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 2, utilityY, tile, tile, "×"));
     }
 
     @Override public void drawScreen(int mx,int my,float partialTicks) {
         super.drawScreen(mx,my,partialTicks);
-        drawRect(0,0,width,height,0x10000000);
+        // Softly darken the panorama without changing its composition.
+        drawRect(0,0,width,height,0x24000000);
+
         String brand="FIRED";
         GlStateManager.pushMatrix();
-        GlStateManager.scale(2.7F,2.7F,1.0F);
-        fontRendererObj.drawStringWithShadow(brand,
-                width/5.4F-fontRendererObj.getStringWidth(brand)/2.0F,
-                height/5.4F-12.0F,WHITE);
+        float scale = Math.min(3.2F, Math.max(2.3F, width / 350.0F));
+        GlStateManager.scale(scale,scale,1.0F);
+        int logoX = (int)(width/(2.0F*scale)-fontRendererObj.getStringWidth(brand)/2.0F);
+        int logoY = (int)(height*0.105F/scale);
+        fontRendererObj.drawStringWithShadow(brand,logoX,logoY,WHITE);
         GlStateManager.popMatrix();
-        int cx=width/2;
-        RenderUtil.drawGradientH(cx-58,height/2-24,cx+58,height/2-22,0x00FF4A16,ORANGE);
+
         String subtitle="MINECRAFT 1.8.9";
         fontRendererObj.drawStringWithShadow(subtitle,
-                cx-fontRendererObj.getStringWidth(subtitle)/2,height/2-15,MUTED);
+                width/2-fontRendererObj.getStringWidth(subtitle)/2,
+                (int)(height*0.105F)+48,MUTED);
+        RenderUtil.drawGradientH(width/2-72,(int)(height*0.105F)+40,
+                width/2+72,(int)(height*0.105F)+42,0x00FF4A16,ORANGE);
+
+        // Large lower-right client tile occupies the same visual anchor as Lunar's.
+        int tileW=Math.min(230,Math.max(150,width/4));
+        int tileH=100, tx=width-tileW-18, ty=height-tileH-16;
+        boolean over=mx>=tx&&mx<tx+tileW&&my>=ty&&my<ty+tileH;
+        RenderUtil.drawRoundedRect(tx,ty,tx+tileW,ty+tileH,7,over?0xE5452420:0xD51A1720);
+        RenderUtil.drawOutline(tx,ty,tx+tileW,ty+tileH,over?0xB5FF4A16:0x55777777);
+        String mark="F";
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(2.2F,2.2F,1F);
+        fontRendererObj.drawStringWithShadow(mark,
+                (tx+tileW/2-fontRendererObj.getStringWidth(mark)*1.1F)/2F,
+                (ty+22)/2F,ORANGE);
+        GlStateManager.popMatrix();
+        fontRendererObj.drawStringWithShadow("FIRED CLIENT",
+                tx+(tileW-fontRendererObj.getStringWidth("FIRED CLIENT"))/2,
+                ty+64,WHITE);
+        fontRendererObj.drawStringWithShadow("1.8.9  •  v"+AstroClient.VERSION,
+                tx+(tileW-fontRendererObj.getStringWidth("1.8.9  •  v"+AstroClient.VERSION))/2,
+                ty+78,MUTED);
+
         fontRendererObj.drawStringWithShadow("FIRED CLIENT  /  v"+AstroClient.VERSION,
-                8,height-13,0xFFB5B5BC);
-        fontRendererObj.drawStringWithShadow("FIRED",width-43,height-13,ORANGE);
+                10,height-12,0xFFB5B5BC);
     }
 
     @Override protected void actionPerformed(GuiButton b)throws IOException {
@@ -58,6 +93,7 @@ public final class CustomMainMenu extends GuiMainMenu {
             case MODS: mc.displayGuiScreen(new ClickGUI()); break;
             case OPTIONS: mc.displayGuiScreen(new GuiOptions(this,mc.gameSettings)); break;
             case QUIT: mc.shutdown(); break;
+            default: super.actionPerformed(b);
         }
     }
 
@@ -67,9 +103,9 @@ public final class CustomMainMenu extends GuiMainMenu {
             if(!visible)return;
             hovered=mx>=xPosition&&my>=yPosition&&mx<xPosition+width&&my<yPosition+height;
             int bg=hovered?HOVER:BTN;
-            RenderUtil.drawRect(xPosition,yPosition,xPosition+width,yPosition+height,bg);
-            if(hovered)RenderUtil.drawRect(xPosition,yPosition,xPosition+2,yPosition+height,ORANGE);
-            RenderUtil.drawOutline(xPosition,yPosition,xPosition+width,yPosition+height,0x30FFFFFF);
+            RenderUtil.drawRoundedRect(xPosition,yPosition,xPosition+width,yPosition+height,5,bg);
+            RenderUtil.drawOutline(xPosition,yPosition,xPosition+width,yPosition+height,
+                    hovered?0x90FF4A16:0x40777777);
             int color=hovered?WHITE:0xFFE0E0E0;
             mc.fontRendererObj.drawStringWithShadow(displayString,
                     xPosition+(width-mc.fontRendererObj.getStringWidth(displayString))/2,
