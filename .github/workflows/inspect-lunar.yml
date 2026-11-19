@@ -1,10 +1,12 @@
-name: Inspect Lunar archive
+name: Inspect Lunar archives
 
 on:
   workflow_dispatch:
   push:
     paths:
       - "lunar.rar"
+      - "lunar-lang.rar"
+      - "lunar-platform-mappings-v1_8.rar"
       - ".github/workflows/inspect-lunar.yml"
 
 permissions:
@@ -14,33 +16,45 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Download archive from this repository
+      - name: Download all Lunar archives
         run: |
-          curl -fL --retry 3 --retry-delay 2 \
-            "https://raw.githubusercontent.com/davicarrile26-code/astro-client/main/lunar.rar" \
-            -o lunar.rar
-          test -s lunar.rar
-          ls -lh lunar.rar
+          set -e
+          mkdir -p archives extracted
+          for file in lunar.rar lunar-lang.rar lunar-platform-mappings-v1_8.rar; do
+            echo "Downloading $file"
+            curl -fL --retry 3 --retry-delay 2 \
+              "https://raw.githubusercontent.com/davicarrile26-code/astro-client/main/$file" \
+              -o "archives/$file"
+            test -s "archives/$file"
+            ls -lh "archives/$file"
+          done
 
       - name: Install archive extractor
         run: |
           sudo apt-get update
           sudo apt-get install -y p7zip-full
 
-      - name: Extract and create inventory
+      - name: Extract and inventory all archives
         run: |
-          7z l lunar.rar
-          mkdir -p lunar-extracted
-          7z x lunar.rar -olunar-extracted -y
-          find lunar-extracted -type f -printf '%P\n' | sort > lunar-inventory.txt
-          echo "Files extracted: $(wc -l < lunar-inventory.txt)"
-          test -s lunar-inventory.txt
-          zip -qr lunar-inspection.zip lunar-extracted lunar-inventory.txt
+          set -e
+          for archive in archives/*.rar; do
+            name="$(basename "$archive" .rar)"
+            mkdir -p "extracted/$name"
+            echo "===== $name ====="
+            7z l "$archive"
+            7z x "$archive" "-oextracted/$name" -y
+          done
+          find extracted -type f -printf '%P\n' | sort > lunar-inventory.txt
+          echo "Total extracted files: $(wc -l < lunar-inventory.txt)"
+          echo "Java class files: $(find extracted -type f -name '*.class' | wc -l)"
+          echo "JAR files: $(find extracted -type f -name '*.jar' | wc -l)"
+          echo "Images: $(find extracted -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.webp' \) | wc -l)"
+          zip -qr lunar-inspection.zip extracted lunar-inventory.txt
 
-      - name: Upload extracted archive and inventory
+      - name: Upload extracted archives and inventory
         uses: actions/upload-artifact@v4
         with:
-          name: lunar-inspection
+          name: lunar-inspection-all
           path: |
             lunar-inspection.zip
             lunar-inventory.txt
