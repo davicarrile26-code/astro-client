@@ -65,8 +65,10 @@ public final class ForgeEventBridge {
         // Dispatch to our internal EventBus (module key-binds)
         AstroClient.INSTANCE.getEventBus().post(new KeyEvent(key));
 
-        // ClickGUI
-        if (AstroClient.keyOpenGui.isPressed()) {
+        // ClickGUI: check the raw key event instead of KeyBinding.isPressed().
+        // Minecraft only consumes queued KeyBindings during the in-game tick;
+        // this raw event also works while the title screen or another GUI is open.
+        if (AstroClient.keyOpenGui != null && key == AstroClient.keyOpenGui.getKeyCode()) {
             Minecraft mc = Minecraft.getMinecraft();
             if (mc.currentScreen instanceof ClickGUI) {
                 mc.displayGuiScreen(null);
