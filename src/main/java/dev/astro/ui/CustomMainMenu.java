@@ -19,67 +19,73 @@ public final class CustomMainMenu extends GuiMainMenu {
     private static final int MUTED = 0xFFB5B5BC;
     private static final int BTN = 0xB52B3036;
     private static final int HOVER = 0xE5454B52;
-    private static final int SINGLE=1, MULTI=2, OPTIONS=4, QUIT=5, MODS=6, LANGUAGE=7, COSMETICS=8;
+    private static final int SINGLE=1, MULTI=2, OPTIONS=4, QUIT=5, MODS=6, COSMETICS=8;
     private static final ResourceLocation FIRED_ICON = new ResourceLocation("firedclient", "textures/gui/fired.png");
 
     @Override public void initGui() {
         super.initGui();
         buttonList.clear();
 
-        // The reference uses one centered vertical stack, not a button grid.
-        int primaryW = Math.min(444, Math.max(260, width - 40));
-        int primaryH = 38;
+        // Main Lunar-style composition: two wide centered buttons.
+        int primaryW = Math.min(396, Math.max(250, width - 48));
+        int primaryH = 34;
         int primaryX = (width - primaryW) / 2;
-        int primaryY = Math.max(210, height * 41 / 100);
-        buttonList.add(new FlatButton(SINGLE, primaryX, primaryY, primaryW, primaryH, "S I N G L E P L A Y E R"));
-        buttonList.add(new FlatButton(MULTI, primaryX, primaryY + 50, primaryW, primaryH, "M U L T I P L A Y E R"));
+        int primaryY = Math.max(150, Math.min(height - 150, height * 465 / 1000));
+        buttonList.add(new FlatButton(SINGLE, primaryX, primaryY, primaryW, primaryH,
+                "S I N G L E P L A Y E R"));
+        buttonList.add(new FlatButton(MULTI, primaryX, primaryY + 47, primaryW, primaryH,
+                "M U L T I P L A Y E R"));
 
-        // Four compact shortcut tiles along the bottom, following Lunar's menu rhythm.
-        int tile = 42, gap = 9;
-        int utilityX = width / 2 - (tile * 2 + gap * 2) - (tile + gap) / 2;
-        int utilityY = height - 58;
+        // Four small utility icons, centered along the bottom edge.
+        int tile = 36, gap = 7;
+        int total = tile * 4 + gap * 3;
+        int utilityX = (width - total) / 2;
+        int utilityY = height - 49;
         buttonList.add(new FlatButton(OPTIONS, utilityX, utilityY, tile, tile, ""));
-        buttonList.add(new FlatButton(LANGUAGE, utilityX + tile + gap, utilityY, tile, tile, ""));
+        buttonList.add(new FlatButton(COSMETICS, utilityX + tile + gap, utilityY, tile, tile, ""));
         buttonList.add(new FlatButton(MODS, utilityX + (tile + gap) * 2, utilityY, tile, tile, ""));
-        buttonList.add(new FlatButton(COSMETICS, utilityX + (tile + gap) * 3, utilityY, tile, tile, ""));
-        buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 4, utilityY, tile, tile, ""));
+        buttonList.add(new FlatButton(QUIT, utilityX + (tile + gap) * 3, utilityY, tile, tile, ""));
     }
 
     @Override public void drawScreen(int mx,int my,float partialTicks) {
         super.drawScreen(mx,my,partialTicks);
-        // Softly darken the panorama without changing its composition.
         drawRect(0,0,width,height,0x24000000);
 
-        // FIRED icon and wordmark replace Lunar branding; keep the Minecraft panorama.
-        int logoSize = Math.min(58, Math.max(40, width / 18));
+        // Replace only Lunar's mark and wordmark with FIRED branding.
+        int logoSize = Math.min(116, Math.max(72, width / 7));
         int logoX = width / 2 - logoSize / 2;
-        int logoY = Math.max(28, (int)(height * 0.075F));
+        int logoY = Math.max(22, height / 11);
         mc.getTextureManager().bindTexture(FIRED_ICON);
         drawModalRectWithCustomSizedTexture(logoX, logoY, 0, 0, logoSize, logoSize, 256, 256);
-        String brand="FIRED CLIENT";
-        int brandY=logoY+logoSize+7;
-        fontRendererObj.drawStringWithShadow(brand, width/2-fontRendererObj.getStringWidth(brand)/2, brandY, WHITE);
-        String subtitle="MINECRAFT 1.8.9";
-        fontRendererObj.drawStringWithShadow(subtitle, width/2-fontRendererObj.getStringWidth(subtitle)/2, brandY+15, MUTED);
-        RenderUtil.drawGradientH(width/2-72,brandY+29,width/2+72,brandY+31,0x00FF4A16,ORANGE);
+        String brand = "FIRED CLIENT";
+        fontRendererObj.drawStringWithShadow(brand,
+                width / 2 - fontRendererObj.getStringWidth(brand) / 2,
+                logoY + logoSize + 17, WHITE);
 
-        // Lower-right FIRED client tile.
-        int tileW=Math.min(230,Math.max(150,width/4));
-        int tileH=76, tx=width-tileW-18, ty=height-tileH-16;
-        boolean over=mx>=tx&&mx<tx+tileW&&my>=ty&&my<ty+tileH;
-        RenderUtil.drawRoundedRect(tx,ty,tx+tileW,ty+tileH,7,over?0xE5452420:0xD51A1720);
-        RenderUtil.drawOutline(tx,ty,tx+tileW,ty+tileH,over?0xB5FF4A16:0x55777777);
+        // Bottom-right client tile mirrors the reference's launcher tile.
+        int tileW = Math.min(204, Math.max(160, width / 4));
+        int tileH = 88;
+        int tx = width - tileW - 14;
+        int ty = height - tileH - 14;
+        boolean over = mx >= tx && mx < tx + tileW && my >= ty && my < ty + tileH;
+        RenderUtil.drawRoundedRect(tx,ty,tx+tileW,ty+tileH,6,
+                over ? 0xE52C1830 : 0xD51A1720);
+        RenderUtil.drawOutline(tx,ty,tx+tileW,ty+tileH,
+                over ? 0xB5FF4A16 : 0x55777777);
         mc.getTextureManager().bindTexture(FIRED_ICON);
-        drawModalRectWithCustomSizedTexture(tx+12,ty+14,0,0,46,46,256,256);
-        fontRendererObj.drawStringWithShadow("FIRED CLIENT",tx+68,ty+23,WHITE);
-        fontRendererObj.drawStringWithShadow("1.8.9  -  v"+AstroClient.VERSION,tx+68,ty+39,MUTED);
+        drawModalRectWithCustomSizedTexture(tx + 13, ty + 17, 0, 0, 48, 48, 256, 256);
+        fontRendererObj.drawStringWithShadow("FIRED CLIENT",
+                tx + 67, ty + 30, WHITE);
+        fontRendererObj.drawStringWithShadow("1.8.9  -  v" + AstroClient.VERSION,
+                tx + 67, ty + 47, MUTED);
 
-        // Cover vanilla/Forge version and branding lines drawn by GuiMainMenu
-        // in the lower-left corner, then show a single FIRED status label.
-        RenderUtil.drawRoundedRect(8, height - 27, 190, height - 5, 5, 0xE5101117);
-        RenderUtil.drawOutline(8, height - 27, 190, height - 5, 0x55FF4A16);
-        fontRendererObj.drawStringWithShadow("FIRED CLIENT  /  v"+AstroClient.VERSION,
-                17,height-19,0xFFF0F0F2);
+        // Version and copyright captions at the two lower corners.
+        fontRendererObj.drawStringWithShadow("FIRED CLIENT 1.8.9",
+                12, height - 13, MUTED);
+        String copyright = "Copyright Mojang AB. Do not distribute!";
+        fontRendererObj.drawStringWithShadow(copyright,
+                width - fontRendererObj.getStringWidth(copyright) - 12,
+                height - 13, MUTED);
     }
 
     @Override protected void actionPerformed(GuiButton b)throws IOException {
@@ -89,7 +95,6 @@ public final class CustomMainMenu extends GuiMainMenu {
             case MODS: mc.displayGuiScreen(new ClickGUI()); break;
             case COSMETICS: mc.displayGuiScreen(new CosmeticsGUI(this)); break;
             case OPTIONS: mc.displayGuiScreen(new GuiOptions(this,mc.gameSettings)); break;
-            case LANGUAGE: mc.displayGuiScreen(new GuiLanguage(this,mc.gameSettings,mc.getLanguageManager())); break;
             case QUIT: mc.shutdown(); break;
             default: super.actionPerformed(b);
         }
