@@ -50,6 +50,11 @@ public final class CustomMainMenu extends GuiScreen {
         drawString(fontRendererObj,"1.8.9",px+30,py+panelH-42,MUTED);
 
         int cx=width/2;
+        RenderUtil.drawRoundedRect(cx-31,py+43,cx+31,py+105,12,ORANGE);
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(2.0F,2.0F,1.0F);
+        fontRendererObj.drawStringWithShadow("F",(cx-11)/2F,(py+53)/2F,0xFFFFF4EE);
+        GlStateManager.popMatrix();
         String title="FIRED";
         GlStateManager.pushMatrix();
         float scale=3.4F;
